@@ -3,7 +3,7 @@
 **ESF-6 partner resource matchmaker for people with access and functional needs (AFN) in Hawaiʻi**
 Hawaiʻi Annual Innovation Challenge (HAIC) 2026 · AI-Developed Planning Challenge · Sponsor: Hawaiʻi Department of Human Services (DHS)
 
-**Live app:** [`https://<your-github-username>.github (replace after turning on GitHub Pages)](https://github.com/HAIC-2026/Waipahu-Hammahs)
+**Live app:** [`[https://<your-github-username>.github](https://haic-2026.github.io/Waipahu-Hammahs/) (replace after turning on GitHub Pages)](https://github.com/HAIC-2026/Waipahu-Hammahs)
 
 ## The problem
 
