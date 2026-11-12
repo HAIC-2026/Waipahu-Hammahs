@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Kōkua Match: ESF-6 partner resource matchmaker for access and functional needs in Hawaiʻi. HAIC 2026.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Kōkua Match</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky ops bar + tabbed workspace; tables and partner cards on a cool green-grey ground, CMIST letters as the recurring signal */
+:root{
+  --bg:#f1f4f2; --surface:#ffffff; --surface-2:#f6f8f7; --ink:#14211d; --muted:#55655f; --line:#d5ded9; --line-strong:#b5c4bd;
+  --accent:#0d6a58; --accent-ink:#ffffff; --accent-soft:#d9ede6;
+  --good:#1b7140; --good-soft:#ddf0e3; --warn:#875500; --warn-soft:#faedd2; --crit:#ac241c; --crit-soft:#fae2de;
+  --c-C:#2d5cae; --c-M:#ac241c; --c-I:#7448ab; --c-S:#0d6a58; --c-T:#9c5308; --c-G:#55655f;
+  --font:"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --shadow:0 1px 2px rgba(20,33,29,.06),0 8px 24px rgba(20,33,29,.08);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1412; --surface:#141e1b; --surface-2:#18241f; --ink:#e1ebe7; --muted:#94a69f; --line:#25332e; --line-strong:#36473f;
+  --accent:#4bc0a2; --accent-ink:#06231c; --accent-soft:#143a31;
+  --good:#63c48b; --good-soft:#163527; --warn:#e2a646; --warn-soft:#3a2b10; --crit:#f2867e; --crit-soft:#3d1916;
+  --c-C:#7ea6ef; --c-M:#f2867e; --c-I:#bf9cf0; --c-S:#4bc0a2; --c-T:#eba35d; --c-G:#94a69f;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d1412; --surface:#141e1b; --surface-2:#18241f; --ink:#e1ebe7; --muted:#94a69f; --line:#25332e; --line-strong:#36473f;
+  --accent:#4bc0a2; --accent-ink:#06231c; --accent-soft:#143a31;
+  --good:#63c48b; --good-soft:#163527; --warn:#e2a646; --warn-soft:#3a2b10; --crit:#f2867e; --crit-soft:#3d1916;
+  --c-C:#7ea6ef; --c-M:#f2867e; --c-I:#bf9cf0; --c-S:#4bc0a2; --c-T:#eba35d; --c-G:#94a69f;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--font);margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+h1,h2,h3{margin:0;line-height:1.25;text-wrap:balance}
+h2{font-size:20px;font-weight:700}
+h3{font-size:15px;font-weight:600}
+p{margin:0}
+a{color:var(--accent)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.wrap{max-width:1220px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{flex:none}
+.brand-name{font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-sub{font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sync{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.sync.live i{background:var(--good)} .sync.slow i,.sync.connecting i{background:var(--warn)} .sync.error i,.sync.offline i{background:var(--crit)}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none;border:0;background:none;font:inherit;font-weight:600;font-size:14px;color:var(--muted);padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--ink)}
+.tab .count{font-family:var(--mono);font-size:11px;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+
+/* layout */
+main{padding-block:24px 64px}
+.view-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.view-head .lead{color:var(--muted);max-width:68ch;margin-top:4px}
+.view-head .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.panel h3{margin-bottom:10px}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.stack{display:grid;gap:16px}
+@media (max-width:900px){.grid-2,.grid-3{grid-template-columns:minmax(0,1fr)}}
+.banner{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:10px;font-size:14px;margin-bottom:16px;border:1px solid transparent}
+.banner.warn{background:var(--warn-soft);color:var(--ink);border-color:color-mix(in srgb,var(--warn) 30%,transparent)}
+.banner.crit{background:var(--crit-soft);border-color:color-mix(in srgb,var(--crit) 30%,transparent)}
+.banner.info{background:var(--accent-soft)}
+.banner b{font-weight:600}
+
+/* toolbar + inputs */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+.toolbar label{display:grid;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+.toolbar .grow{flex:1 1 200px}
+input,select,textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:7px 10px;min-width:0;max-width:100%}
+textarea{resize:vertical;width:100%}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);padding:0}
+.check{display:inline-flex !important;align-items:center;gap:6px;font-size:14px !important;color:var(--ink) !important;font-weight:500 !important;grid-auto-flow:column}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* buttons */
+.btn{font:inherit;font-weight:600;font-size:14px;padding:7px 14px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;line-height:1.3}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn.sm{padding:4px 10px;font-size:13px}
+.btn.danger{color:var(--crit)}
+.btn.ai{border-color:color-mix(in srgb,var(--c-I) 45%,var(--line-strong))}
+.btn.ai::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--c-I);transform:rotate(45deg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icon-btn{border:0;background:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:4px 8px;border-radius:6px}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* chips + CMIST badges */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);white-space:nowrap;line-height:1.6}
+.chip.good{background:var(--good-soft);color:var(--good);border-color:transparent}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.crit{background:var(--crit-soft);color:var(--crit);border-color:transparent}
+.chip.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.chip.ai{background:color-mix(in srgb,var(--c-I) 14%,transparent);color:var(--c-I);border-color:transparent}
+.cm{--cm:var(--c-G);display:inline-grid;place-items:center;width:22px;height:22px;flex:none;border-radius:6px;font:600 12px var(--mono);color:var(--cm);background:color-mix(in srgb,var(--cm) 15%,transparent)}
+.cm-C{--cm:var(--c-C)} .cm-M{--cm:var(--c-M)} .cm-I{--cm:var(--c-I)} .cm-S{--cm:var(--c-S)} .cm-T{--cm:var(--c-T)} .cm-G{--cm:var(--c-G)}
+.prio{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.prio.ls{color:var(--crit)} .prio.hi{color:var(--warn)} .prio.no{color:var(--muted)}
+
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:2px;align-content:start}
+.kpi .k-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.03em;text-transform:uppercase}
+.kpi .k-val{font:600 28px/1.2 var(--mono);font-variant-numeric:tabular-nums}
+.kpi .k-note{font-size:13px;color:var(--muted)}
+.kpi.crit .k-val{color:var(--crit)} .kpi.warn .k-val{color:var(--warn)} .kpi.good .k-val{color:var(--good)}
+
+/* bars */
+.bars{display:grid;gap:12px}
+.bar-row{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr) auto;gap:10px;align-items:center}
+@media (max-width:560px){.bar-row{grid-template-columns:minmax(0,1fr) auto}.bar-row .bar{grid-column:1/-1;grid-row:2}}
+.bar-label{display:flex;gap:8px;align-items:center;font-size:14px;min-width:0}
+.bar-label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:10px;border-radius:999px;background:var(--line);display:flex;overflow:hidden}
+.bar .c{background:var(--accent)} .bar .p{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+.bar-val{font:500 13px var(--mono);color:var(--muted);white-space:nowrap}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.03em;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13px;white-space:nowrap}
+.tbl .t-main{font-weight:600}
+.tbl .t-sub{font-size:12px;color:var(--muted)}
+.tbl .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tbl tr.over td{background:var(--crit-soft)}
+
+/* lists */
+.list{display:grid;gap:0}
+.li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0}
+.li-main{flex:1;min-width:0}
+.li-title{font-weight:600}
+.li-sub{font-size:13px;color:var(--muted)}
+.li-end{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+
+/* partner cards */
+.cards{display:grid;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card-head{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;flex-wrap:wrap}
+.card-title{font-weight:700;font-size:16px}
+.card-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.card-route{font-size:13px;color:var(--muted);margin-top:6px}
+.card-head .acts{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.card .tbl-wrap{border:0;border-top:1px solid var(--line);border-radius:0}
+.card-foot{padding:10px 16px;border-top:1px solid var(--line);background:var(--surface-2);display:flex;gap:8px;flex-wrap:wrap}
+select.status-sel{padding:3px 6px;font-size:13px}
+
+/* board */
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+.col{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
+.col-head{display:flex;align-items:center;gap:8px;font-weight:700}
+.col-head .chip{margin-left:auto}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:6px}
+.mcard.lead{border-left:3px solid var(--accent)}
+.mcard .why{font-size:13px;color:var(--muted);border-left:2px solid color-mix(in srgb,var(--c-I) 50%,transparent);padding-left:8px}
+.mcard .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.empty-col{font-size:13px;color:var(--muted);padding:8px 2px}
+
+/* empty state */
+.empty{text-align:left;padding:28px;border:1px dashed var(--line-strong);border-radius:12px;background:var(--surface);display:grid;gap:12px;max-width:760px}
+.empty h3{font-size:18px}
+.steps{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--muted)}
+
+/* briefing */
+.brief-text{white-space:pre-wrap;font:13.5px/1.6 var(--mono);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:14px;max-height:520px;overflow:auto}
+.ai-out{white-space:pre-wrap;font-size:14.5px;line-height:1.6;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:14px;min-height:64px}
+.ai-out:empty{display:none}
+.ai-note{font-size:12px;color:var(--muted)}
+.ask-row{display:flex;gap:8px;flex-wrap:wrap}
+.ask-row input{flex:1 1 260px}
+
+/* data */
+pre.tpl{font:12.5px/1.5 var(--mono);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto;margin:0;white-space:pre}
+.msg{font-size:14px}
+.msg.ok{color:var(--good)} .msg.bad{color:var(--crit)}
+.msg ul{margin:6px 0 0;padding-left:20px}
+.rules{margin:0;padding-left:20px;display:grid;gap:6px}
+
+/* dialog */
+dialog{border:1px solid var(--line);border-radius:14px;padding:0;width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 48px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+dialog.wide{width:min(980px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(8,16,13,.5)}
+.dlg-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.dlg-head h2{font-size:17px;flex:1}
+.dlg-body{padding:16px 18px;display:grid;gap:14px}
+.dlg-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line);background:var(--surface-2);position:sticky;bottom:0}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form label{display:grid;gap:4px;font-size:13px;font-weight:600}
+.form .full{grid-column:1/-1}
+.form fieldset{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:0;display:flex;flex-wrap:wrap;gap:6px 16px}
+.form legend{font-size:13px;font-weight:600;padding:0 4px}
+@media (max-width:560px){.form{grid-template-columns:minmax(0,1fr)}}
+.hint{font-size:12.5px;color:var(--muted)}
+.form-err{color:var(--crit);font-size:13.5px;font-weight:500}
+.need-sum{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);flex-wrap:wrap}
+.reasons{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.score{font:600 15px var(--mono)}
+.qty-in{width:84px}
+
+/* toasts */
+#toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:50;max-width:min(380px,calc(100vw - 32px))}
+.toast{background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:14px;box-shadow:var(--shadow);border-left:4px solid var(--good)}
+.toast.warn{border-left-color:var(--warn)} .toast.crit{border-left-color:var(--crit)}
+@media (prefers-reduced-motion:no-preference){.toast{animation:tin .18s ease-out}@keyframes tin{from{transform:translateY(6px);opacity:0}}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" rx="9" fill="var(--accent)"/><path d="M9 21.5c3.5 0 4.6-9 8-9s4.5 9 8 9" fill="none" stroke="var(--accent-ink)" stroke-width="2.4" stroke-linecap="round"/><circle cx="9" cy="21.5" r="2.4" fill="var(--accent-ink)"/><circle cx="25" cy="21.5" r="2.4" fill="var(--accent-ink)"/></svg>
+        <div>
+          <div class="brand-name">Kōkua Match</div>
+          <div class="brand-sub">ESF-6 partner resources · AFN needs</div>
+        </div>
+      </div>
+      <div class="top-right">
+        <span id="event-pill"></span>
+        <button class="btn sm" data-action="event-settings" id="event-settings-btn" hidden>Event settings</button>
+        <span class="sync connecting" id="sync" role="status"><i></i><span>Connecting</span></span>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-overview" aria-controls="view-overview" data-tab="overview">Overview</button>
+      <button class="tab" role="tab" id="tab-needs" aria-controls="view-needs" data-tab="needs">Needs<span class="count" id="cnt-needs">0</span></button>
+      <button class="tab" role="tab" id="tab-partners" aria-controls="view-partners" data-tab="partners">Partners &amp; resources<span class="count" id="cnt-partners">0</span></button>
+      <button class="tab" role="tab" id="tab-board" aria-controls="view-board" data-tab="board">Match board<span class="count" id="cnt-board">0</span></button>
+      <button class="tab" role="tab" id="tab-briefing" aria-controls="view-briefing" data-tab="briefing">Briefing</button>
+      <button class="tab" role="tab" id="tab-data" aria-controls="view-data" data-tab="data">Data &amp; privacy</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="global-banner"></div>
+
+  <!-- OVERVIEW -->
+  <section id="view-overview" role="tabpanel" aria-labelledby="tab-overview">
+    <div class="view-head">
+      <div><h2>Where needs and partner resources stand</h2><p class="lead">One shared picture of access and functional needs (CMIST), the partners who can meet them, and the gaps that still need a decision.</p></div>
+    </div>
+    <div id="ov-empty" hidden>
+      <div class="empty">
+        <h3>Start the shared picture</h3>
+        <p class="muted">Nothing has been added to this workspace yet. Partners, needs and matches you add here are shared with everyone who opens this app.</p>
+        <ol class="steps">
+          <li>Add the partners who hold resources: agencies, nonprofits, faith groups, utilities, businesses.</li>
+          <li>Add the needs your county plan or estimates call for, with where each number comes from.</li>
+          <li>Run matching, confirm a lead for each need, and share the briefing.</li>
+        </ol>
+        <div class="btn-row"><button class="btn primary" data-action="add-partner" data-write>Add a partner</button><button class="btn" data-action="add-need" data-write>Add a need</button><button class="btn" data-action="goto" data-view="data">Import a CSV</button></div>
+      </div>
+    </div>
+    <div id="ov-main">
+      <div class="kpis" id="ov-kpis"></div>
+      <div class="grid-2">
+        <div class="panel"><h3>Biggest gaps</h3><div id="ov-gaps" class="list"></div></div>
+        <div class="stack">
+          <div class="panel"><h3>Coverage by CMIST need</h3><div id="ov-cmist" class="bars"></div>
+            <div class="legend"><span><i style="background:var(--accent)"></i>Confirmed</span><span><i style="background:color-mix(in srgb,var(--accent) 35%,transparent)"></i>Proposed</span><span><i style="background:var(--line)"></i>Not covered</span></div></div>
+          <div class="panel"><h3>Coverage by island</h3><div id="ov-islands" class="bars"></div></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px"><h3>Recent activity</h3><div id="ov-activity" class="list"></div></div>
+    </div>
+  </section>
+
+  <!-- NEEDS -->
+  <section id="view-needs" role="tabpanel" aria-labelledby="tab-needs" hidden>
+    <div class="view-head">
+      <div><h2>Needs</h2><p class="lead">What each area will need for a hazard, sized from county plans or estimates. Every need records where its number comes from.</p></div>
+      <div class="actions"><button class="btn" data-action="auto-match" data-write>Auto-match open needs</button><button class="btn primary" data-action="add-need" data-write>Add a need</button></div>
+    </div>
+    <div class="toolbar">
+      <label>Island<select id="nf-island"></select></label>
+      <label>CMIST<select id="nf-cmist"></select></label>
+      <label>Status<select id="nf-status"><option value="">All</option><option>Open</option><option>Proposed</option><option>Partly covered</option><option>Covered</option></select></label>
+      <label class="grow">Search<input id="nf-q" type="search" placeholder="Need, area or source"></label>
+    </div>
+    <div id="needs-list"></div>
+  </section>
+
+  <!-- PARTNERS -->
+  <section id="view-partners" role="tabpanel" aria-labelledby="tab-partners" hidden>
+    <div class="view-head">
+      <div><h2>Partners &amp; resources</h2><p class="lead">Who can provide what, where, and when they last confirmed it. Replace phone-tree check-ins with one shared record.</p></div>
+      <div class="actions"><button class="btn" data-action="find-dupes">Find duplicates</button><button class="btn primary" data-action="add-partner" data-write>Add a partner</button></div>
+    </div>
+    <div class="toolbar">
+      <label>Island<select id="pf-island"></select></label>
+      <label>Resource<select id="pf-cat"></select></label>
+      <label>Type<select id="pf-type"></select></label>
+      <label class="grow">Search<input id="pf-q" type="search" placeholder="Partner name or language"></label>
+      <label class="check"><input type="checkbox" id="pf-stale"> Needs check-in only</label>
+    </div>
+    <div id="partners-list" class="cards"></div>
+  </section>
+
+  <!-- BOARD -->
+  <section id="view-board" role="tabpanel" aria-labelledby="tab-board" hidden>
+    <div class="view-head">
+      <div><h2>Match board</h2><p class="lead">Proposed matches wait for a person to confirm them. Each need gets one lead partner; others support. Confirmations record who decided and when.</p></div>
+      <div class="actions"><button class="btn ai" data-action="ai-match" data-ai data-write>Suggest matches with AI</button><button class="btn primary" data-action="auto-match" data-write>Auto-match open needs</button></div>
+    </div>
+    <div class="panel" style="margin-bottom:16px"><h3>Decision points</h3><div id="board-decisions" class="list"></div></div>
+    <div class="cols" id="board-cols"></div>
+  </section>
+
+  <!-- BRIEFING -->
+  <section id="view-briefing" role="tabpanel" aria-labelledby="tab-briefing" hidden>
+    <div class="view-head">
+      <div><h2>Briefing</h2><p class="lead">A summary built straight from the records, a field sheet for low-connectivity use, and an AI briefing for leadership.</p></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel stack">
+        <div><h3>Situation summary</h3><p class="ai-note">Generated from the records, no AI. Updates live.</p></div>
+        <div class="brief-text" id="brief-summary"></div>
+        <div class="btn-row">
+          <button class="btn sm" data-action="copy-summary">Copy</button>
+          <button class="btn sm" data-action="dl-summary">Download summary (.md)</button>
+          <button class="btn sm" data-action="dl-field">Download field sheet (.html)</button>
+          <button class="btn sm" data-action="dl-plan">Download plan (.csv)</button>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="panel stack" data-ai>
+          <div><h3>Leadership briefing</h3><p class="ai-note">Written by Claude from the records only, with record references. A person reviews it before it goes anywhere.</p></div>
+          <div class="btn-row"><button class="btn ai" data-action="ai-brief" id="ai-brief-btn">Write briefing</button><button class="btn sm" data-action="ai-brief-stop" id="ai-brief-stop" hidden>Stop</button><button class="btn sm" data-action="copy-ai-brief" id="ai-brief-copy" hidden>Copy</button></div>
+          <div class="ai-out" id="ai-brief-out" aria-live="polite"></div>
+        </div>
+        <div class="panel stack" data-ai>
+          <div><h3>Ask the records</h3><p class="ai-note">Answers cite records and say so when the data doesn't cover the question.</p></div>
+          <form class="ask-row" id="ask-form"><label class="sr" for="ask-q">Question</label><input id="ask-q" maxlength="400" placeholder="e.g., Which Maui needs have no confirmed lead?"><button class="btn ai" type="submit" id="ask-btn">Ask</button></form>
+          <div class="ai-out" id="ask-out" aria-live="polite"></div>
+        </div>
+        <div class="panel" data-ai-off hidden><h3>AI features are off in this view</h3><p class="muted small">The AI briefing, AI match suggestions and question answering run in the version hosted on Claude, where each person allows the app to use their own Claude account. Matching, check-ins, the summary, the field sheet and exports all work here without AI.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA -->
+  <section id="view-data" role="tabpanel" aria-labelledby="tab-data" hidden>
+    <div class="view-head">
+      <div><h2>Data &amp; privacy</h2><p class="lead">Bring in partner inventories and needs estimates as CSV, export everything, and see the privacy rules this workspace enforces.</p></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel stack">
+        <h3>Import partners and resources</h3>
+        <p class="small muted">One row per resource. Rows with the same partner name are grouped under one partner; names that already exist here are reused.</p>
+        <pre class="tpl" id="tpl-p"></pre>
+        <div class="btn-row"><button class="btn sm" data-action="copy-tpl" data-which="p">Copy template</button><label class="btn sm" for="imp-p-file">Choose CSV file</label><input type="file" id="imp-p-file" accept=".csv,text/csv" class="sr"></div>
+        <label class="small" for="imp-p">Or paste CSV</label>
+        <textarea id="imp-p" rows="5" spellcheck="false"></textarea>
+        <div class="btn-row"><button class="btn" data-action="imp-check" data-which="p">Check rows</button><button class="btn primary" data-action="imp-go" data-which="p" id="imp-p-go" disabled data-write>Import</button></div>
+        <div class="msg" id="imp-p-msg" aria-live="polite"></div>
+      </div>
+      <div class="panel stack">
+        <h3>Import needs</h3>
+        <p class="small muted">One row per need. Every row must say where its number comes from in the basis column.</p>
+        <pre class="tpl" id="tpl-n"></pre>
+        <div class="btn-row"><button class="btn sm" data-action="copy-tpl" data-which="n">Copy template</button><label class="btn sm" for="imp-n-file">Choose CSV file</label><input type="file" id="imp-n-file" accept=".csv,text/csv" class="sr"></div>
+        <label class="small" for="imp-n">Or paste CSV</label>
+        <textarea id="imp-n" rows="5" spellcheck="false"></textarea>
+        <div class="btn-row"><button class="btn" data-action="imp-check" data-which="n">Check rows</button><button class="btn primary" data-action="imp-go" data-which="n" id="imp-n-go" disabled data-write>Import</button></div>
+        <div class="msg" id="imp-n-msg" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="grid-3" style="margin-top:16px">
+      <div class="panel stack">
+        <h3>Export</h3>
+        <p class="small muted">Exports use the same columns as the import templates, so files round-trip.</p>
+        <div class="btn-row"><button class="btn sm" data-action="dl-p">Partners &amp; resources (.csv)</button><button class="btn sm" data-action="dl-n">Needs (.csv)</button><button class="btn sm" data-action="dl-m">Matches (.csv)</button></div>
+      </div>
+      <div class="panel stack">
+        <h3>Example records</h3>
+        <div id="demo-info" class="small"></div>
+        <div><button class="btn sm danger" data-action="rm-demo" id="rm-demo" data-write>Remove example records</button></div>
+      </div>
+      <div class="panel stack">
+        <h3>Privacy rules enforced here</h3>
+        <ul class="rules small">
+          <li>Only groups, areas and organizations. No resident names, contacts, case numbers or dates of birth.</li>
+          <li>Text that looks like personal information is blocked before it is saved.</li>
+          <li>Partner contacts are organization lines, not personal ones.</li>
+          <li>AI sees only these de-identified records, never client systems.</li>
+          <li>Every need records the source of its number.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel stack" id="local-panel" hidden style="margin-top:16px">
+      <h3>Records on this device</h3>
+      <p class="small muted">This standalone version saves records in this browser only. Nothing is sent anywhere. To move records to another computer, download a backup here and restore it there.</p>
+      <div class="btn-row">
+        <button class="btn sm" data-action="backup-dl">Download backup (.json)</button>
+        <label class="btn sm" for="restore-file">Restore from backup</label><input type="file" id="restore-file" accept=".json,application/json" class="sr">
+        <button class="btn sm danger" data-action="reset-example">Reset to example data</button>
+      </div>
+      <div class="msg" id="local-msg" aria-live="polite"></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg"></dialog>
+<dialog id="cdlg" aria-labelledby="cdlg-title"></dialog>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- reference lists ---------- */
+const ISLANDS = ['Oʻahu','Maui','Hawaiʻi Island','Kauaʻi','Molokaʻi','Lānaʻi','Statewide'];
+const PLACE_ISLANDS = ISLANDS.filter(i => i !== 'Statewide');
+const HAZARDS = ['Wildfire','Hurricane','Tsunami','Flood','Earthquake','Other'];
+const CMIST = {C:'Communication', M:'Medical', I:'Independence', S:'Safety & support', T:'Transportation', G:'General mass care'};
+const CATS = [
+  {k:'shelter', label:'Shelter space', cmist:'G', unit:'people'},
+  {k:'afn_shelter', label:'Accessible shelter (FNSS)', cmist:'I', unit:'people'},
+  {k:'transport', label:'Accessible transport', cmist:'T', unit:'seats'},
+  {k:'power', label:'Power for medical devices', cmist:'M', unit:'devices'},
+  {k:'oxygen', label:'Oxygen and medical supplies', cmist:'M', unit:'patients'},
+  {k:'meds', label:'Medication and cold storage', cmist:'M', unit:'patients'},
+  {k:'interp', label:'Language interpreters', cmist:'C', unit:'interpreters'},
+  {k:'asl', label:'ASL and Deaf access', cmist:'C', unit:'interpreters'},
+  {k:'comms', label:'Satellite and radio comms', cmist:'C', unit:'kits'},
+  {k:'mobility', label:'Mobility aids and DME', cmist:'I', unit:'items'},
+  {k:'water', label:'Drinking water', cmist:'G', unit:'gallons'},
+  {k:'food', label:'Meals', cmist:'G', unit:'meals'},
+  {k:'pets', label:'Pet and service animal support', cmist:'S', unit:'animals'},
+  {k:'bh', label:'Behavioral health and crisis support', cmist:'S', unit:'staff'},
+  {k:'child', label:'Child supervision and reunification', cmist:'S', unit:'staff'},
+  {k:'volunteers', label:'Trained volunteers', cmist:'G', unit:'people'}
+];
+const PTYPES = ['State agency','County agency','Nonprofit','Faith-based','Health care','Utility','Business','Community group'];
+const CHANNELS = ['Phone','Email','Text message','Radio','Satellite messenger','In person'];
+const PRIORITIES = ['Life-safety','High','Normal'];
+const PRANK = {'Life-safety':0, High:1, Normal:2};
+const RSTATUS = ['Available','Limited','Committed','Unavailable'];
+const DRAFT_LANGS = ['ʻŌlelo Hawaiʻi','Ilokano','Tagalog','Marshallese','Chuukese','Spanish','Japanese','Chinese','Korean','Vietnamese'];
+const VIEWS = ['overview','needs','partners','board','briefing','data'];
+const TPL_P = 'partner_name,partner_type,islands,contact,primary_channel,backup_channel,languages,resource_category,resource_island,quantity,unit,status,last_confirmed,notes';
+const TPL_P_EX = TPL_P + '\nUpcountry Faith Network,Faith-based,Maui,Main office line,Phone,Text message,Ilokano;Tagalog,Shelter space,Maui,120,people,Available,2026-11-08,Fellowship hall with generator hookup\nUpcountry Faith Network,Faith-based,Maui,Main office line,Phone,Text message,Ilokano;Tagalog,Trained volunteers,Maui,25,people,Limited,2026-11-08,';
+const TPL_N = 'title,island,area,hazard,category,quantity,unit,priority,basis,notes';
+const TPL_N_EX = TPL_N + '\nAccessible shelter beds,Maui,Kula,Wildfire,Accessible shelter (FNSS),40,people,Life-safety,County shelter plan 2025 Annex B,\nInterpreters (Ilokano),Maui,Wailuku,Wildfire,Language interpreters,4,interpreters,High,ACS 5-year C16001 estimate,';
+
+/* ---------- state ---------- */
+const S = {
+  view:'overview', partners:new Map(), resources:new Map(), needs:new Map(), matches:new Map(), activity:[], settings:{},
+  db:null, user:null, sample:null, downloads:null, me:null, canAdmin:false, readOnly:false,
+  sync:'connecting', loaded:{}, profiles:{}, dlg:null, pending:{p:null,n:null}, dismissed:new Set(),
+  briefCtl:null, askCtl:null, aiBriefText:''
+};
+
+/* ---------- helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = new Intl.NumberFormat('en-US');
+const num = v => nf.format(Math.round(+v || 0));
+const now = () => new Date().toISOString();
+const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+const catOf = k => CATS.find(c => c.k === k) || {k, label:k || 'Other', cmist:'G', unit:''};
+const opts = (list, sel, blank) => (blank ? `<option value="">${esc(blank)}</option>` : '') + list.map(x => `<option${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('');
+const catOpts = (sel, blank) => (blank ? `<option value="">${esc(blank)}</option>` : '') + Object.keys(CMIST).map(c => `<optgroup label="${esc(c + ' · ' + CMIST[c])}">` + CATS.filter(x => x.cmist === c).map(x => `<option value="${x.k}"${x.k === sel ? ' selected' : ''}>${esc(x.label)}</option>`).join('') + '</optgroup>').join('');
+const cmBadge = c => `<span class="cm cm-${esc(c)}" title="${esc(CMIST[c] || '')}" aria-label="${esc(CMIST[c] || '')}">${esc(c)}</span>`;
+const prioTag = p => `<span class="prio ${p === 'Life-safety' ? 'ls' : p === 'High' ? 'hi' : 'no'}">${esc(p || 'Normal')}</span>`;
+const strip = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[ʻʼ'’‘`]/g, '').toLowerCase().trim();
+function ago(iso){
+  if (!iso) return 'never';
+  const h = (Date.now() - Date.parse(iso)) / 36e5;
+  if (!isFinite(h)) return 'unknown';
+  if (h < 1/60) return 'just now';
+  if (h < 1) return Math.round(h * 60) + ' min ago';
+  if (h < 48) return Math.round(h) + ' h ago';
+  return Math.round(h / 24) + ' days ago';
+}
+const hst = iso => new Date(iso || Date.now()).toLocaleString('en-US', {timeZone:'Pacific/Honolulu', month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'}) + ' HST';
+function toast(msg, kind='good'){
+  if (!msg) return;
+  const t = document.createElement('div'); t.className = 'toast ' + kind; t.textContent = msg;
+  $('#toasts').append(t); setTimeout(() => t.remove(), 4500);
+}
+function islandNorm(s){
+  const k = strip(s);
+  const alias = {'big island':'Hawaiʻi Island','hawaii':'Hawaiʻi Island','hawaii island':'Hawaiʻi Island','hawaii county':'Hawaiʻi Island','oahu':'Oʻahu','honolulu':'Oʻahu','maui':'Maui','kauai':'Kauaʻi','molokai':'Molokaʻi','lanai':'Lānaʻi','statewide':'Statewide','all':'Statewide'};
+  return alias[k] || ISLANDS.find(i => strip(i) === k) || null;
+}
+function catNorm(s){ const k = strip(s); const c = CATS.find(x => x.k === k || strip(x.label) === k); return c ? c.k : null; }
+
+/* ---------- privacy guard ---------- */
+const PII = [
+  {re:/\b\d{3}-\d{2}-\d{4}\b/, why:'a Social Security number', org:true},
+  {re:/[\w.+-]+@[\w-]+\.[\w.-]+/, why:'an email address'},
+  {re:/(?:\+?1[\s.-]?)?\(?\b\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/, why:'a phone number'},
+  {re:/\b(?:DOB|D\.O\.B|date of birth|born on)\b/i, why:'a date of birth', org:true},
+  {re:/\b(?:Mr|Mrs|Ms|Miss|Auntie|Uncle|Tutu)\.?\s+[A-Z][a-zʻ]+/, why:'a person’s name', org:true},
+  {re:/\b(?:case|client|patient|medicaid|member|MRN)\s*(?:#|no\.?|number|id)\s*[:#]?\s*[\w-]*\d/i, why:'a case or client number', org:true}
+];
+function piiCheck(fields, orgOnly){
+  for (const [label, v] of fields) {
+    if (!v) continue;
+    for (const p of PII) if ((!orgOnly || p.org) && p.re.test(v)) return `${label} looks like it contains ${p.why}. Records here describe groups, areas and organizations, never individual residents.`;
+  }
+  return null;
+}
+
+/* ---------- derived data ---------- */
+function staleHours(){ return S.settings.mode === 'Activated' ? (+S.settings.staleActivatedHours || 12) : (+S.settings.stalePlanningDays || 30) * 24; }
+function isStale(r){ if (!r.lastConfirmed) return true; return (Date.now() - Date.parse(r.lastConfirmed)) / 36e5 > staleHours(); }
+function compatible(needCat, resCat){ return needCat === resCat || (needCat === 'shelter' && resCat === 'afn_shelter'); }
+function needStats(n){
+  let conf = 0, prop = 0, lead = null, propLead = null, count = 0;
+  for (const m of S.matches.values()) {
+    if (m.needId !== n.id) continue;
+    if (m.status === 'Confirmed') { conf += +m.quantity || 0; count++; if (m.role === 'Lead') lead = m; }
+    else if (m.status === 'Proposed') { prop += +m.quantity || 0; count++; if (m.role === 'Lead') propLead = m; }
+  }
+  const q = +n.quantity || 0;
+  const gap = Math.max(0, q - conf);
+  const cov = q ? Math.min(1, conf / q) : 0;
+  const pcov = q ? Math.min(1 - cov, prop / q) : 0;
+  const status = q > 0 && conf >= q ? 'Covered' : conf > 0 ? 'Partly covered' : prop > 0 ? 'Proposed' : 'Open';
+  return {conf, prop, gap, cov, pcov, lead, propLead, status, count};
+}
+function resUse(r, extra){
+  let used = 0;
+  for (const m of S.matches.values()) if (m.resourceId === r.id && (m.status === 'Confirmed' || m.status === 'Proposed')) used += +m.quantity || 0;
+  used += (extra && extra[r.id]) || 0;
+  const q = +r.quantity || 0;
+  return {used, avail:Math.max(0, q - used), over:used > q};
+}
+const pName = id => S.partners.get(id)?.name || 'Removed partner';
+function statusChip(s){
+  const k = {Covered:'good', 'Partly covered':'warn', Proposed:'accent', Open:'crit', Available:'good', Limited:'warn', Committed:'', Unavailable:'crit', Confirmed:'good', Declined:'', 'Needs check-in':'warn'}[s] ?? '';
+  return `<span class="chip ${k}">${esc(s)}</span>`;
+}
+function candidates(n, extraUse, gapOverride){
+  const st = needStats(n);
+  const gap = gapOverride ?? st.gap;
+  const out = [];
+  for (const r of S.resources.values()) {
+    if (!compatible(n.category, r.category)) continue;
+    const same = r.island === n.island;
+    if (!same && r.island !== 'Statewide') continue;
+    if (r.status === 'Unavailable' || r.status === 'Committed') continue;
+    const {avail} = resUse(r, extraUse);
+    if (avail <= 0) continue;
+    const stale = isStale(r);
+    const cover = gap > 0 ? Math.min(1, avail / gap) : 1;
+    const score = Math.round(100 * (0.35 * cover + 0.2 * (r.status === 'Available' ? 1 : 0.6) + 0.25 * (stale ? 0.4 : 1) + 0.2 * (same ? 1 : 0.7)));
+    const reasons = [
+      same ? {t:'Same island', k:'good'} : {t:'Statewide: needs inter-island lift', k:'warn'},
+      stale ? {t:'Capacity not confirmed recently', k:'warn'} : {t:'Confirmed ' + ago(r.lastConfirmed), k:'good'},
+      cover >= 1 ? {t:'Covers the full gap', k:'good'} : {t:`Covers ${Math.round(cover * 100)}% of the gap`, k:''}
+    ];
+    if (r.status === 'Limited') reasons.push({t:'Limited availability', k:'warn'});
+    if (r.category !== n.category) reasons.push({t:'Accessible shelter serving general need', k:''});
+    out.push({r, p:S.partners.get(r.partnerId), avail, score, stale, reasons});
+  }
+  return out.sort((a, b) => b.score - a.score || b.avail - a.avail);
+}
+function who(id, rec){
+  if (!id) return rec && rec.demo ? 'example data' : 'someone';
+  if (id === S.me) return 'you';
+  return S.profiles[id] || 'a teammate';
+}
+
+/* ---------- routing + render ---------- */
+function route(){
+  let v = location.hash.slice(1);
+  if (!VIEWS.includes(v)) v = 'overview';
+  S.view = v;
+  for (const x of VIEWS) {
+    $('#view-' + x).hidden = x !== v;
+    const t = $('#tab-' + x); t.setAttribute('aria-selected', String(x === v)); t.tabIndex = x === v ? 0 : -1;
+  }
+  render();
+}
+let rq = 0;
+function render(){
+  if (rq) return;
+  rq = requestAnimationFrame(() => {
+    rq = 0;
+    renderHeader();
+    ({overview:renderOverview, needs:renderNeeds, partners:renderPartners, board:renderBoard, briefing:renderBriefing, data:renderData})[S.view]();
+    if (S.dlg && S.dlg.type === 'match' && $('#dlg').open) renderMatchBody();
+    applyAI(); applyRO(document);
+    refreshProfiles();
+  });
+}
+function renderHeader(){
+  const st = S.settings;
+  const pill = $('#event-pill');
+  if (st.mode === 'Activated') pill.innerHTML = `<span class="chip crit">Activated · ${esc(st.eventName || 'Event')}${st.hazard ? ' · ' + esc(st.hazard) : ''}${st.islands?.length ? ' · ' + esc(st.islands.join(', ')) : ''}</span>`;
+  else pill.innerHTML = `<span class="chip accent">Planning mode${st.eventName ? ' · ' + esc(st.eventName) : ''}</span>`;
+  $('#event-settings-btn').hidden = !S.canAdmin;
+  const labels = {connecting:'Connecting', live:'Live, shared', slow:'Slow to connect', error:'Connection lost', offline:'Shared data unavailable'};
+  const sy = $('#sync'); sy.className = 'sync ' + (S.local && S.db && S.db._memOnly() ? 'slow' : S.sync);
+  sy.lastElementChild.textContent = S.local ? (S.db && S.db._memOnly() ? 'Not saved: browser storage is blocked' : 'Saved on this device') : S.readOnly && S.sync === 'live' ? 'Live, view only' : labels[S.sync];
+  const needs = [...S.needs.values()];
+  $('#cnt-needs').textContent = needs.filter(n => needStats(n).gap > 0).length;
+  $('#cnt-partners').textContent = S.partners.size;
+  $('#cnt-board').textContent = [...S.matches.values()].filter(m => m.status === 'Proposed').length;
+  const gb = $('#global-banner');
+  if (S.local && S.db && S.db._memOnly()) gb.innerHTML = `<div class="banner warn"><div><b>This browser is blocking storage.</b> Changes last only until you close the page. Allow site data, or use the Download backup button on the Data tab before closing.</div></div>`;
+  else if (S.sync === 'offline') gb.innerHTML = `<div class="banner crit"><div><b>Shared data isn’t available in this view.</b> Open Kōkua Match inside Claude while signed in to see and change the shared records.</div></div>`;
+  else if (S.sync === 'slow') gb.innerHTML = `<div class="banner warn"><div><b>Shared records can’t be reached yet.</b> What you see may be out of date. The app keeps trying.</div></div>`;
+  else if (S.sync === 'error') gb.innerHTML = `<div class="banner crit"><div><b>The connection to shared records was lost.</b> Reload the page to reconnect.</div></div>`;
+  else if (S.readOnly) gb.innerHTML = `<div class="banner info"><div><b>View only.</b> You can read everything here. Ask the owner for Contributor access to make changes.</div></div>`;
+  else gb.innerHTML = '';
+}
+
+/* ---------- overview ---------- */
+function renderOverview(){
+  const needs = [...S.needs.values()], res = [...S.resources.values()];
+  const empty = !needs.length && !S.partners.size && S.sync !== 'connecting';
+  $('#ov-empty').hidden = !empty; $('#ov-main').hidden = empty;
+  if (empty) return;
+  const stats = needs.map(n => ({n, s:needStats(n)}));
+  const covered = stats.filter(x => x.s.status === 'Covered').length;
+  const gaps = stats.filter(x => x.s.gap > 0);
+  const ls = gaps.filter(x => x.n.priority === 'Life-safety').length;
+  const stale = res.filter(isStale).length;
+  const islands = new Set(); S.partners.forEach(p => (p.islands || []).forEach(i => islands.add(i)));
+  const pct = needs.length ? Math.round(100 * covered / needs.length) : 0;
+  const pending = [...S.matches.values()].filter(m => m.status === 'Proposed').length;
+  $('#ov-kpis').innerHTML = `
+    <div class="kpi ${pct >= 80 ? 'good' : pct >= 40 ? 'warn' : 'crit'}"><span class="k-label">Needs fully covered</span><span class="k-val">${pct}%</span><span class="k-note">${covered} of ${needs.length} needs, confirmed</span></div>
+    <div class="kpi ${ls ? 'crit' : gaps.length ? 'warn' : 'good'}"><span class="k-label">Open gaps</span><span class="k-val">${gaps.length}</span><span class="k-note">${ls} life-safety · ${pending} matches await a decision</span></div>
+    <div class="kpi ${stale ? 'warn' : 'good'}"><span class="k-label">Resources to re-confirm</span><span class="k-val">${stale}</span><span class="k-note">of ${res.length}, not confirmed in ${S.settings.mode === 'Activated' ? staleHours() + ' h' : (staleHours() / 24) + ' days'}</span></div>
+    <div class="kpi"><span class="k-label">Partners</span><span class="k-val">${S.partners.size}</span><span class="k-note">on ${islands.size} of ${ISLANDS.length - 1} islands${islands.has('Statewide') ? ' plus statewide' : ''}</span></div>`;
+  const top = gaps.sort((a, b) => (PRANK[a.n.priority] ?? 2) - (PRANK[b.n.priority] ?? 2) || (b.s.gap / (b.n.quantity || 1)) - (a.s.gap / (a.n.quantity || 1))).slice(0, 7);
+  $('#ov-gaps').innerHTML = top.length ? top.map(({n, s}) => `
+    <div class="li">${cmBadge(n.cmist)}<div class="li-main"><div class="li-title">${esc(n.title)}</div><div class="li-sub">${prioTag(n.priority)} · ${esc(n.island)}${n.area ? ', ' + esc(n.area) : ''} · gap <b class="num">${num(s.gap)}</b> of ${num(n.quantity)} ${esc(n.unit)}${s.lead ? '' : ' · no lead'}</div></div>
+    <div class="li-end"><button class="btn sm" data-action="find-matches" data-id="${esc(n.id)}" data-write>Find matches</button></div></div>`).join('')
+    : `<p class="muted small">No gaps. Every need is fully covered by confirmed matches.</p>`;
+  const bars = (groups, labelFn) => {
+    const rows = Object.entries(groups).filter(([, a]) => a.length);
+    if (!rows.length) return '<p class="muted small">No needs yet.</p>';
+    return rows.map(([k, arr]) => {
+      const c = arr.reduce((t, x) => t + x.s.cov, 0) / arr.length, p = arr.reduce((t, x) => t + x.s.pcov, 0) / arr.length;
+      const full = arr.filter(x => x.s.status === 'Covered').length;
+      return `<div class="bar-row"><div class="bar-label">${labelFn(k)}</div><div class="bar" role="img" aria-label="${Math.round(c * 100)}% confirmed, ${Math.round(p * 100)}% proposed"><span class="c" style="width:${c * 100}%"></span><span class="p" style="width:${p * 100}%"></span></div><div class="bar-val">${full}/${arr.length} · ${Math.round(c * 100)}%</div></div>`;
+    }).join('');
+  };
+  const byC = {}; Object.keys(CMIST).forEach(k => byC[k] = []); stats.forEach(x => (byC[x.n.cmist] || (byC[x.n.cmist] = [])).push(x));
+  $('#ov-cmist').innerHTML = bars(byC, k => `${cmBadge(k)}<span>${esc(CMIST[k])}</span>`);
+  const byI = {}; PLACE_ISLANDS.forEach(k => byI[k] = []); stats.forEach(x => (byI[x.n.island] || (byI[x.n.island] = [])).push(x));
+  $('#ov-islands').innerHTML = bars(byI, k => `<span>${esc(k)}</span>`);
+  $('#ov-activity').innerHTML = S.activity.length ? S.activity.slice(0, 10).map(a => `<div class="li"><div class="li-main"><div>${esc(a.text)}</div><div class="li-sub">${esc(who(a.by, a))} · ${esc(ago(a.at))}</div></div></div>`).join('') : '<p class="muted small">Changes people make will show here.</p>';
+}
+
+/* ---------- needs ---------- */
+function renderNeeds(){
+  const fi = val('nf-island'), fc = val('nf-cmist'), fs = val('nf-status'), q = strip(val('nf-q'));
+  let rows = [...S.needs.values()].map(n => ({n, s:needStats(n)}));
+  rows = rows.filter(({n, s}) => (!fi || n.island === fi) && (!fc || n.cmist === fc) && (!fs || s.status === fs) && (!q || strip([n.title, n.area, n.basis, catOf(n.category).label].join(' ')).includes(q)));
+  rows.sort((a, b) => (PRANK[a.n.priority] ?? 2) - (PRANK[b.n.priority] ?? 2) || b.s.gap - a.s.gap || String(a.n.title).localeCompare(b.n.title));
+  const el = $('#needs-list');
+  if (!S.needs.size) { el.innerHTML = `<div class="empty"><h3>No needs yet</h3><p class="muted">Add what each area needs for a hazard, or import an estimates CSV.</p><div class="btn-row"><button class="btn primary" data-action="add-need" data-write>Add a need</button><button class="btn" data-action="goto" data-view="data">Import CSV</button></div></div>`; return; }
+  if (!rows.length) { el.innerHTML = `<p class="muted">No needs match these filters.</p>`; return; }
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Priority</th><th>Need</th><th>Island · area</th><th class="n">Needed</th><th class="n">Confirmed</th><th class="n">Gap</th><th>Lead partner</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead><tbody>` +
+    rows.map(({n, s}) => `<tr>
+      <td>${prioTag(n.priority)}</td>
+      <td><div style="display:flex;gap:8px">${cmBadge(n.cmist)}<div><div class="t-main">${esc(n.title)}</div><div class="t-sub">${esc(catOf(n.category).label)} · ${esc(n.hazard)} · source: ${esc(n.basis || 'not given')}${n.demo ? ' · <span class="chip">Example</span>' : ''}</div></div></div></td>
+      <td>${esc(n.island)}<div class="t-sub">${esc(n.area || '')}</div></td>
+      <td class="n">${num(n.quantity)}<div class="t-sub">${esc(n.unit)}</div></td>
+      <td class="n">${num(s.conf)}${s.prop ? `<div class="t-sub">+${num(s.prop)} proposed</div>` : ''}</td>
+      <td class="n" style="${s.gap ? 'color:var(--crit)' : ''}">${num(s.gap)}</td>
+      <td>${s.lead ? esc(pName(s.lead.partnerId)) : s.propLead ? `<span class="t-sub">${esc(pName(s.propLead.partnerId))} (proposed)</span>` : '<span class="chip warn">No lead</span>'}</td>
+      <td>${statusChip(s.status)}</td>
+      <td><div class="acts"><button class="btn sm" data-action="find-matches" data-id="${esc(n.id)}">Matches</button><button class="btn sm ghost" data-action="edit-need" data-id="${esc(n.id)}" data-write>Edit</button><button class="btn sm ghost danger" data-action="del-need" data-id="${esc(n.id)}" data-write>Delete</button></div></td>
+    </tr>`).join('') + `</tbody></table></div>`;
+}
+
+/* ---------- partners ---------- */
+function renderPartners(){
+  const fi = val('pf-island'), fc = val('pf-cat'), ft = val('pf-type'), q = strip(val('pf-q')), onlyStale = $('#pf-stale').checked;
+  const el = $('#partners-list');
+  if (!S.partners.size) { el.innerHTML = `<div class="empty"><h3>No partners yet</h3><p class="muted">Add the organizations that hold resources, or import an inventory CSV.</p><div class="btn-row"><button class="btn primary" data-action="add-partner" data-write>Add a partner</button><button class="btn" data-action="goto" data-view="data">Import CSV</button></div></div>`; return; }
+  const resBy = {}; S.resources.forEach(r => (resBy[r.partnerId] || (resBy[r.partnerId] = [])).push(r));
+  let parts = [...S.partners.values()].filter(p => {
+    const rs = resBy[p.id] || [];
+    if (fi && !(p.islands || []).includes(fi) && !rs.some(r => r.island === fi)) return false;
+    if (ft && p.type !== ft) return false;
+    if (fc && !rs.some(r => r.category === fc)) return false;
+    if (onlyStale && !rs.some(isStale)) return false;
+    if (q && !strip([p.name, p.languages, p.type, p.notes].join(' ')).includes(q)) return false;
+    return true;
+  }).sort((a, b) => String(a.name).localeCompare(b.name));
+  if (!parts.length) { el.innerHTML = `<p class="muted">No partners match these filters.</p>`; return; }
+  el.innerHTML = parts.map(p => {
+    let rs = (resBy[p.id] || []).slice().sort((a, b) => catOf(a.category).label.localeCompare(catOf(b.category).label));
+    if (fc) rs = rs.filter(r => r.category === fc);
+    if (onlyStale) rs = rs.filter(isStale);
+    const staleN = (resBy[p.id] || []).filter(isStale).length;
+    return `<article class="card">
+      <div class="card-head">
+        <div style="min-width:0">
+          <div class="card-title">${esc(p.name)}</div>
+          <div class="card-meta"><span class="chip">${esc(p.type || 'Partner')}</span>${(p.islands || []).map(i => `<span class="chip accent">${esc(i)}</span>`).join('')}${p.demo ? '<span class="chip">Example</span>' : ''}${staleN ? `<span class="chip warn">${staleN} to re-confirm</span>` : ''}</div>
+          <div class="card-route">Reach by <b>${esc(p.primaryChannel || '—')}</b>${p.backupChannel ? `, backup <b>${esc(p.backupChannel)}</b>` : ''}${p.contact ? ` · ${esc(p.contact)}` : ''}${p.languages ? ` · Languages: ${esc(p.languages)}` : ''}</div>
+        </div>
+        <div class="acts"><button class="btn sm" data-action="checkin" data-id="${esc(p.id)}">Check-in message</button><button class="btn sm ghost" data-action="edit-partner" data-id="${esc(p.id)}" data-write>Edit</button><button class="btn sm ghost danger" data-action="del-partner" data-id="${esc(p.id)}" data-write>Delete</button></div>
+      </div>
+      ${rs.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Resource</th><th>Island</th><th class="n">Free / total</th><th>Status</th><th>Last confirmed</th><th><span class="sr">Actions</span></th></tr></thead><tbody>${rs.map(r => {
+        const u = resUse(r), st = isStale(r);
+        return `<tr class="${u.over ? 'over' : ''}"><td><div style="display:flex;gap:8px">${cmBadge(catOf(r.category).cmist)}<div><div class="t-main">${esc(catOf(r.category).label)}</div>${r.notes ? `<div class="t-sub">${esc(r.notes)}</div>` : ''}</div></div></td>
+          <td>${esc(r.island)}</td>
+          <td class="n">${num(u.avail)} / ${num(r.quantity)}<div class="t-sub">${esc(r.unit)}${u.over ? ' · over-committed' : ''}</div></td>
+          <td><label class="sr" for="rs-${esc(r.id)}">Status</label><select class="status-sel" id="rs-${esc(r.id)}" data-res-status="${esc(r.id)}" data-write>${opts(RSTATUS, r.status)}</select></td>
+          <td>${st ? `<span class="chip warn">${esc(ago(r.lastConfirmed))}</span>` : `<span class="small">${esc(ago(r.lastConfirmed))}</span>`}<div class="t-sub">${r.confirmedBy || r.demo ? 'by ' + esc(who(r.confirmedBy, r)) : ''}</div></td>
+          <td><div class="acts"><button class="btn sm" data-action="confirm-res" data-id="${esc(r.id)}" data-write>Confirm now</button><button class="btn sm ghost" data-action="edit-resource" data-id="${esc(r.id)}" data-write>Edit</button><button class="btn sm ghost danger" data-action="del-resource" data-id="${esc(r.id)}" data-write>Delete</button></div></td></tr>`;
+      }).join('')}</tbody></table></div>` : ''}
+      <div class="card-foot"><button class="btn sm" data-action="add-resource" data-id="${esc(p.id)}" data-write>Add resource</button>${(resBy[p.id] || []).length ? `<button class="btn sm ghost" data-action="confirm-all" data-id="${esc(p.id)}" data-write>Confirm all as current</button>` : ''}</div>
+    </article>`;
+  }).join('');
+}
+
+/* ---------- board ---------- */
+function renderBoard(){
+  const ms = [...S.matches.values()];
+  const needs = [...S.needs.values()].map(n => ({n, s:needStats(n)}));
+  const dec = [];
+  needs.filter(x => x.n.priority === 'Life-safety' && x.s.gap > 0).forEach(({n, s}) => dec.push({k:'crit', t:`Life-safety gap: ${n.title}`, sub:`${n.island} · gap ${num(s.gap)} ${n.unit}`, act:`<button class="btn sm" data-action="find-matches" data-id="${esc(n.id)}">Find matches</button>`}));
+  needs.filter(x => x.s.count && !x.s.lead).forEach(({n, s}) => dec.push({k:'warn', t:`No confirmed lead: ${n.title}`, sub:s.propLead ? `Proposed lead: ${pName(s.propLead.partnerId)}. Confirm it to assign the lead.` : 'Mark one confirmed partner as lead so roles are clear.', act:`<button class="btn sm" data-action="find-matches" data-id="${esc(n.id)}">Assign lead</button>`}));
+  S.resources.forEach(r => { const u = resUse(r); if (u.over) dec.push({k:'crit', t:`Over-committed: ${pName(r.partnerId)} · ${catOf(r.category).label}`, sub:`${num(u.used)} promised, ${num(r.quantity)} ${r.unit} on record`, act:`<button class="btn sm" data-action="edit-resource" data-id="${esc(r.id)}" data-write>Update quantity</button>`}); });
+  const staleUsed = new Set(ms.filter(m => m.status === 'Confirmed').map(m => m.resourceId));
+  staleUsed.forEach(id => { const r = S.resources.get(id); if (r && isStale(r)) dec.push({k:'warn', t:`Confirmed match relies on unconfirmed capacity: ${pName(r.partnerId)}`, sub:`${catOf(r.category).label} · last confirmed ${ago(r.lastConfirmed)}`, act:`<button class="btn sm" data-action="checkin" data-id="${esc(r.partnerId)}">Check-in message</button>`}); });
+  $('#board-decisions').innerHTML = dec.length ? dec.slice(0, 12).map(d => `<div class="li"><span class="chip ${d.k}">${d.k === 'crit' ? 'Act now' : 'Decide'}</span><div class="li-main"><div class="li-title">${esc(d.t)}</div><div class="li-sub">${esc(d.sub)}</div></div><div class="li-end">${d.act}</div></div>`).join('') + (dec.length > 12 ? `<p class="small muted" style="padding-top:8px">${dec.length - 12} more not shown.</p>` : '')
+    : '<p class="muted small">No open decisions. Every match has an owner and every life-safety need is covered.</p>';
+  const col = (status, title) => {
+    const list = ms.filter(m => m.status === status).sort((a, b) => String(b.decidedAt || b.createdAt).localeCompare(String(a.decidedAt || a.createdAt)));
+    return `<div class="col"><div class="col-head">${esc(title)}<span class="chip">${list.length}</span></div>${list.length ? list.map(mCard).join('') : `<p class="empty-col">${status === 'Proposed' ? 'Nothing waiting. Run auto-match or open a need to propose partners.' : status === 'Confirmed' ? 'No confirmed matches yet.' : 'No declined matches.'}</p>`}</div>`;
+  };
+  $('#board-cols').innerHTML = col('Proposed', 'Proposed') + col('Confirmed', 'Confirmed') + col('Declined', 'Declined');
+}
+function mCard(m){
+  const n = S.needs.get(m.needId), r = S.resources.get(m.resourceId);
+  return `<div class="mcard ${m.role === 'Lead' ? 'lead' : ''}">
+    <div style="display:flex;gap:8px;align-items:flex-start">${cmBadge(n ? n.cmist : 'G')}<div style="min-width:0"><div class="li-title">${esc(n ? n.title : 'Removed need')}</div><div class="li-sub">${n ? esc(n.island) + (n.area ? ', ' + esc(n.area) : '') : ''}</div></div></div>
+    <div class="small"><b>${esc(pName(m.partnerId))}</b> → ${num(m.quantity)} ${esc(r ? r.unit : (n ? n.unit : ''))} ${r ? esc(catOf(r.category).label.toLowerCase()) : ''}${r && r.island !== (n && n.island) ? ` <span class="chip warn">from ${esc(r.island)}</span>` : ''}</div>
+    <div class="btn-row"><span class="chip ${m.role === 'Lead' ? 'accent' : ''}">${esc(m.role)}</span>${m.aiSuggested ? '<span class="chip ai">AI suggested</span>' : ''}${m.demo ? '<span class="chip">Example</span>' : ''}</div>
+    ${m.rationale ? `<div class="why">${esc(m.rationale)}</div>` : ''}
+    <div class="li-sub">${m.status === 'Proposed' ? 'Proposed ' + esc(ago(m.createdAt)) : esc(m.status) + ' by ' + esc(who(m.decidedBy, m)) + ' · ' + esc(ago(m.decidedAt))}</div>
+    <div class="acts">${m.status === 'Proposed' ? `<button class="btn sm primary" data-action="m-confirm" data-id="${esc(m.id)}" data-write>Confirm</button><button class="btn sm" data-action="m-decline" data-id="${esc(m.id)}" data-write>Decline</button>` : `<button class="btn sm" data-action="m-reopen" data-id="${esc(m.id)}" data-write>Reopen</button>`}<button class="btn sm ghost" data-action="m-role" data-id="${esc(m.id)}" data-write>${m.role === 'Lead' ? 'Make support' : 'Make lead'}</button><button class="btn sm ghost danger" data-action="m-remove" data-id="${esc(m.id)}" data-write>Remove</button></div>
+  </div>`;
+}
+
+/* ---------- briefing ---------- */
+function summaryText(){
+  const st = S.settings;
+  const needs = [...S.needs.values()].map(n => ({n, s:needStats(n)}));
+  const gaps = needs.filter(x => x.s.gap > 0).sort((a, b) => (PRANK[a.n.priority] ?? 2) - (PRANK[b.n.priority] ?? 2) || b.s.gap - a.s.gap);
+  const covered = needs.filter(x => x.s.status === 'Covered').length;
+  const stale = [...S.resources.values()].filter(isStale);
+  const pending = [...S.matches.values()].filter(m => m.status === 'Proposed').length;
+  const noLead = needs.filter(x => x.s.count && !x.s.lead).length;
+  const L = [];
+  L.push('ESF-6 PARTNER RESOURCE SUMMARY');
+  L.push('As of ' + hst());
+  L.push(st.mode === 'Activated' ? `ACTIVATED: ${st.eventName || 'Event'}${st.hazard ? ' (' + st.hazard + ')' : ''}${st.islands?.length ? ', ' + st.islands.join(', ') : ''}` : `Planning mode${st.eventName ? ': ' + st.eventName : ''}`);
+  L.push('');
+  L.push(`Needs: ${needs.length} total, ${covered} fully covered, ${gaps.length} with gaps (${gaps.filter(x => x.n.priority === 'Life-safety').length} life-safety)`);
+  L.push(`Partners: ${S.partners.size}. Resources: ${S.resources.size}.`);
+  L.push('');
+  L.push('TOP GAPS');
+  if (!gaps.length) L.push('- None. All needs covered by confirmed matches.');
+  gaps.slice(0, 8).forEach((x, i) => L.push(`${i + 1}. [${x.n.priority}] ${x.n.title} (${x.n.island}${x.n.area ? ', ' + x.n.area : ''}): gap ${num(x.s.gap)} of ${num(x.n.quantity)} ${x.n.unit}; lead: ${x.s.lead ? pName(x.s.lead.partnerId) : 'none'}; source: ${x.n.basis || 'not given'}`));
+  L.push('');
+  L.push('DECISIONS PENDING');
+  L.push(`- ${pending} proposed match${pending === 1 ? '' : 'es'} waiting for confirmation`);
+  L.push(`- ${noLead} need${noLead === 1 ? '' : 's'} without a confirmed lead partner`);
+  L.push('');
+  L.push(`CHECK-INS NEEDED (not confirmed in ${S.settings.mode === 'Activated' ? staleHours() + ' hours' : staleHours() / 24 + ' days'})`);
+  if (!stale.length) L.push('- None.');
+  stale.slice(0, 12).forEach(r => { const p = S.partners.get(r.partnerId); L.push(`- ${p ? p.name : 'Unknown'}: ${catOf(r.category).label}, ${r.island}, last confirmed ${ago(r.lastConfirmed)}. Reach by ${p?.primaryChannel || 'unknown'}${p?.backupChannel ? ' / ' + p.backupChannel : ''}.`); });
+  if (stale.length > 12) L.push(`- ${stale.length - 12} more`);
+  return L.join('\n');
+}
+function renderBriefing(){ $('#brief-summary').textContent = summaryText(); }
+function dataForAI(){
+  const needs = [...S.needs.values()].slice(0, 150).map(n => { const s = needStats(n); return {id:'need:' + n.id, title:n.title, island:n.island, area:n.area || '', hazard:n.hazard, category:n.category, cmist:CMIST[n.cmist], priority:n.priority, needed:+n.quantity, unit:n.unit, confirmed:s.conf, proposed:s.prop, gap:s.gap, lead:s.lead ? pName(s.lead.partnerId) : null, source:n.basis || null}; });
+  const resources = [...S.resources.values()].slice(0, 300).map(r => { const u = resUse(r); return {id:'res:' + r.id, partner:pName(r.partnerId), category:r.category, island:r.island, total:+r.quantity, available:u.avail, unit:r.unit, status:r.status, lastConfirmed:r.lastConfirmed || null, stale:isStale(r)}; });
+  const partners = [...S.partners.values()].slice(0, 200).map(p => ({id:'partner:' + p.id, name:p.name, type:p.type, islands:p.islands, primaryChannel:p.primaryChannel, backupChannel:p.backupChannel || null, languages:p.languages || ''}));
+  const matches = [...S.matches.values()].filter(m => m.status !== 'Declined').slice(0, 300).map(m => ({need:'need:' + m.needId, partner:pName(m.partnerId), quantity:+m.quantity, role:m.role, status:m.status}));
+  return {asOf:hst(), mode:S.settings.mode || 'Planning', event:S.settings.eventName || null, hazard:S.settings.hazard || null, staleThresholdHours:staleHours(), needs, resources, partners, matches};
+}
+
+/* ---------- data view ---------- */
+function renderData(){
+  const d = ['needs','partners','resources','matches'].map(k => [k, [...S[k].values()].filter(x => x.demo).length]);
+  const total = d.reduce((t, [, c]) => t + c, 0);
+  $('#demo-info').innerHTML = total ? `<p>This workspace holds <b>${total}</b> example records (${d.filter(([, c]) => c).map(([k, c]) => c + ' ' + k).join(', ')}), marked “Example”. They are made-up and exist only to show how the app works. Remove them before real use.</p>` : '<p class="muted">No example records. Everything here was entered or imported by your team.</p>';
+  $('#rm-demo').hidden = !total;
+  $('#local-panel').hidden = !S.local;
+}
+
+/* ---------- AI + read-only gates ---------- */
+function applyAI(){ $$('[data-ai]').forEach(el => el.hidden = !S.sample); $$('[data-ai-off]').forEach(el => el.hidden = !!S.sample); }
+function applyRO(root){ const off = S.readOnly || !S.db; $$('[data-write]', root).forEach(b => { b.disabled = off; }); }
+function aiErr(e){
+  const c = e && e.code;
+  if (['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(c)) { S.sample = null; applyAI(); return 'AI is turned off for this view. Everything else still works.'; }
+  return {rate_limited:'AI is busy or your usage limit is reached. Try again in a few minutes.', session_expired:'Sign in to Claude again to use AI.', prompt_too_large:'Too much data to send at once. Remove old records or filter to fewer needs.', invalid_json:'The AI reply could not be read. Try again.', refused:'The AI declined this request. Try rewording it.', empty_completion:'The AI returned nothing. Try again with a shorter request.', cancelled:''}[c] ?? 'The AI request failed. Try again.';
+}
+
+/* ---------- writes ---------- */
+async function w(fn, okMsg){
+  if (!S.db) { toast('Shared data isn’t available in this view.', 'crit'); return false; }
+  if (S.readOnly) { toast('You have view-only access.', 'warn'); return false; }
+  try { await fn(); if (okMsg) toast(okMsg); return true; }
+  catch (e) {
+    const c = e && e.code;
+    if (c === 'invalid_argument') { toast('This change wasn’t saved. You may have view-only access.', 'crit'); S.readOnly = true; render(); }
+    else if (c === 'quota_exceeded') toast('Storage is full. Remove old records, then try again.', 'crit');
+    else if (c === 'resource_exhausted') toast('Too many changes at once. Wait a moment and try again.', 'warn');
+    else if (c === 'revoked') toast('Your access to this workspace changed.', 'crit');
+    else toast('Couldn’t save. Check your connection and try again.', 'crit');
+    return false;
+  }
+}
+function log(text){ if (!S.db || S.readOnly) return; S.db.collection('activity').add({text, at:now(), by:S.me}).catch(() => {}); }
+async function seq(items, fn){ for (const it of items) await fn(it); }
+
+/* ---------- dialogs ---------- */
+function openDialog(title, body, o = {}){
+  const d = $('#dlg');
+  S.dlg = o.ctx || null;
+  d.className = o.wide ? 'wide' : '';
+  d.innerHTML = `<div class="dlg-head"><h2 id="dlg-title">${esc(title)}</h2><button class="icon-btn" type="button" data-action="close-dlg" aria-label="Close">×</button></div><div class="dlg-body" id="dlg-body">${body}</div>${o.submit ? `<div class="dlg-foot"><button class="btn" type="button" data-action="close-dlg">${esc(o.cancel || 'Cancel')}</button><button class="btn primary" type="submit" form="${esc(o.form)}" data-write>${esc(o.submit)}</button></div>` : `<div class="dlg-foot"><button class="btn" type="button" data-action="close-dlg">Close</button></div>`}`;
+  d.setAttribute('aria-labelledby', 'dlg-title');
+  if (o.form) {
+    const f = document.getElementById(o.form);
+    f.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const btn = d.querySelector('button[type=submit]'); if (btn) btn.disabled = true;
+      try { const ok = await o.onSubmit(); if (ok !== false) closeDialog(); }
+      finally { if (btn && d.open) btn.disabled = S.readOnly; }
+    });
+  }
+  if (!d.open) d.showModal();
+  applyRO(d); applyAI();
+  if (o.onOpen) o.onOpen(d);
+  const first = d.querySelector('.dlg-body input:not([type=checkbox]),.dlg-body select,.dlg-body textarea');
+  if (first && !o.noFocus) first.focus();
+}
+function closeDialog(){ const d = $('#dlg'); S.dlg = null; if (d.open) d.close(); }
+$('#dlg').addEventListener('close', () => { S.dlg = null; S.matchCtl?.abort(); S.dupCtl?.abort(); S.ciCtl?.abort(); S.aiMatchCtl?.abort(); });
+function confirmBox(title, message, label = 'Delete', danger = true){
+  return new Promise(resolve => {
+    const d = $('#cdlg');
+    d.innerHTML = `<div class="dlg-head"><h2 id="cdlg-title">${esc(title)}</h2></div><div class="dlg-body"><p>${message}</p></div><div class="dlg-foot"><button class="btn" type="button" id="c-no">Cancel</button><button class="btn ${danger ? 'danger' : 'primary'}" type="button" id="c-yes">${esc(label)}</button></div>`;
+    let done = false;
+    const fin = v => { if (done) return; done = true; if (d.open) d.close(); resolve(v); };
+    $('#c-no', d).onclick = () => fin(false);
+    $('#c-yes', d).onclick = () => fin(true);
+    d.onclose = () => fin(false);
+    d.showModal(); $('#c-no', d).focus();
+  });
+}
+function formErr(id, msg){ const el = document.getElementById(id); if (el) { el.textContent = msg; el.hidden = false; } return false; }
+
+/* ---------- copy + download ---------- */
+async function copyText(text, el){
+  try { await navigator.clipboard.writeText(text); toast('Copied'); }
+  catch {
+    if (el && el.select) { el.focus(); el.select(); toast('Press Ctrl+C or ⌘C to copy the selected text.', 'warn'); }
+    else showCopy('Copy text', text);
+  }
+}
+function showCopy(title, text){
+  openDialog(title, `<p class="small muted">Downloads aren’t available in this view. Select the text below and copy it.</p><textarea id="copy-area" rows="14" readonly spellcheck="false">${esc(text)}</textarea><div><button class="btn sm" type="button" id="copy-area-btn">Copy</button></div>`, {noFocus:true, onOpen:d => { $('#copy-area-btn', d).onclick = () => copyText(text, $('#copy-area', d)); }});
+}
+async function offerFile(filename, data){
+  if (S.downloads) {
+    try { await S.downloads.save({filename, data}); toast('Saved ' + filename); return; }
+    catch (e) {
+      const c = e && e.code;
+      if (c === 'declined') return;
+      if (c === 'rate_limited') { toast('Another save is still open. Finish it first.', 'warn'); return; }
+      if (!['unavailable','not_granted','capability_disabled','capability_removed','extension_not_enabled'].includes(c)) { toast('Couldn’t save the file.', 'crit'); return; }
+    }
+  }
+  showCopy(filename, data);
+}
+const csvCell = v => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+const csvRows = rows => rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+function parseCSV(text){
+  const rows = []; let row = [], cell = '', q = false;
+  text = String(text || '').replace(/^﻿/, '');
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  const clean = rows.filter(r => r.some(c => c.trim() !== ''));
+  if (!clean.length) return {head:[], items:[]};
+  const head = clean[0].map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
+  return {head, items:clean.slice(1).map((r, i) => { const o = {_line:i + 2}; head.forEach((h, j) => o[h] = (r[j] ?? '').trim()); return o; })};
+}
+
+/* ---------- needs: form + delete ---------- */
+function needForm(id){
+  const n = id ? S.needs.get(id) : {island:(S.settings.islands || [])[0] || 'Maui', hazard:S.settings.hazard || 'Wildfire', category:'shelter', priority:'High', unit:'people'};
+  if (!n) return;
+  openDialog(id ? 'Edit need' : 'Add a need', `<form class="form" id="f-need" novalidate>
+    <label class="full">What is needed<input id="fn-title" maxlength="120" value="${esc(n.title || '')}" placeholder="e.g., Accessible shelter beds for Upcountry"></label>
+    <label>Island<select id="fn-island">${opts(PLACE_ISLANDS, n.island)}</select></label>
+    <label>Area or community<input id="fn-area" maxlength="80" value="${esc(n.area || '')}" placeholder="e.g., Kula"></label>
+    <label>Hazard<select id="fn-hazard">${opts(HAZARDS, n.hazard)}</select></label>
+    <label>Priority<select id="fn-priority">${opts(PRIORITIES, n.priority)}</select></label>
+    <label class="full">Category<select id="fn-cat">${catOpts(n.category)}</select></label>
+    <label>Quantity needed<input id="fn-qty" type="number" min="1" step="1" inputmode="numeric" value="${esc(n.quantity ?? '')}"></label>
+    <label>Unit<input id="fn-unit" maxlength="30" value="${esc(n.unit || '')}"></label>
+    <label class="full">Where does this number come from?<input id="fn-basis" maxlength="160" value="${esc(n.basis || '')}" placeholder="e.g., County shelter plan 2025, ACS 5-year estimate, partner survey"></label>
+    <label class="full">Notes<textarea id="fn-notes" rows="2" maxlength="400">${esc(n.notes || '')}</textarea></label>
+    <p class="hint full">Describe groups and areas only. Never enter a resident’s name, contact or case details.</p>
+    <p class="form-err full" id="fn-err" role="alert" hidden></p>
+  </form>`, {submit:id ? 'Save need' : 'Add need', form:'f-need', onOpen:d => {
+    $('#fn-cat', d).addEventListener('change', e => { const u = $('#fn-unit', d); if (!u.value || CATS.some(c => c.unit === u.value)) u.value = catOf(e.target.value).unit; });
+  }, onSubmit:async () => {
+    const v = {title:val('fn-title').trim(), island:val('fn-island'), area:val('fn-area').trim(), hazard:val('fn-hazard'), priority:val('fn-priority'), category:val('fn-cat'), quantity:Math.round(+val('fn-qty')), unit:val('fn-unit').trim() || catOf(val('fn-cat')).unit, basis:val('fn-basis').trim(), notes:val('fn-notes').trim()};
+    if (!v.title) return formErr('fn-err', 'Say what is needed.');
+    if (!(v.quantity > 0)) return formErr('fn-err', 'Enter a quantity above zero.');
+    if (!v.basis) return formErr('fn-err', 'Say where the number comes from, so others can check it.');
+    const p = piiCheck([['What is needed', v.title], ['Area', v.area], ['Source', v.basis], ['Notes', v.notes]]); if (p) return formErr('fn-err', p);
+    v.cmist = catOf(v.category).cmist; v.updatedAt = now(); v.updatedBy = S.me;
+    if (id) { const ok = await w(() => S.db.doc('needs/' + id).update(v), 'Need saved'); if (ok) log(`Edited need “${v.title}”`); return ok; }
+    v.createdAt = now(); v.createdBy = S.me;
+    const ok = await w(() => S.db.collection('needs').add(v), 'Need added'); if (ok) log(`Added need “${v.title}” (${v.island})`); return ok;
+  }});
+}
+async function delNeed(id){
+  const n = S.needs.get(id); if (!n) return;
+  const ms = [...S.matches.values()].filter(m => m.needId === id);
+  if (!await confirmBox('Delete this need?', `“${esc(n.title)}” and its ${ms.length} match${ms.length === 1 ? '' : 'es'} will be removed for everyone.`)) return;
+  const ok = await w(async () => { await seq(ms, m => S.db.doc('matches/' + m.id).delete()); await S.db.doc('needs/' + id).delete(); }, 'Need deleted');
+  if (ok) log(`Deleted need “${n.title}”`);
+}
+
+/* ---------- partners: form + delete + merge ---------- */
+function partnerForm(id){
+  const p = id ? S.partners.get(id) : {type:'Nonprofit', islands:(S.settings.islands || []).slice(0, 1), primaryChannel:'Phone'};
+  if (!p) return;
+  openDialog(id ? 'Edit partner' : 'Add a partner', `<form class="form" id="f-partner" novalidate>
+    <label class="full">Organization name<input id="fp-name" maxlength="120" value="${esc(p.name || '')}"></label>
+    <label>Type<select id="fp-type">${opts(PTYPES, p.type)}</select></label>
+    <label>Languages served<input id="fp-lang" maxlength="160" value="${esc(p.languages || '')}" placeholder="e.g., Ilokano, Tagalog, ASL"></label>
+    <fieldset class="full"><legend>Islands served</legend>${ISLANDS.map((i, k) => `<label class="check"><input type="checkbox" id="fp-i${k}" value="${esc(i)}"${(p.islands || []).includes(i) ? ' checked' : ''}> ${esc(i)}</label>`).join('')}</fieldset>
+    <label>Primary channel<select id="fp-ch1">${opts(CHANNELS, p.primaryChannel)}</select></label>
+    <label>Backup channel<select id="fp-ch2">${opts(CHANNELS, p.backupChannel, 'None')}</select></label>
+    <label class="full">Organization contact<input id="fp-contact" maxlength="160" value="${esc(p.contact || '')}" placeholder="Main office line, duty desk, or shared inbox"></label>
+    <label class="full">Notes<textarea id="fp-notes" rows="2" maxlength="400">${esc(p.notes || '')}</textarea></label>
+    <p class="hint full">Use organization contacts, not personal ones. No client information.</p>
+    <p class="form-err full" id="fp-err" role="alert" hidden></p>
+  </form>`, {submit:id ? 'Save partner' : 'Add partner', form:'f-partner', onSubmit:async () => {
+    const islands = ISLANDS.filter((_, k) => $('#fp-i' + k)?.checked);
+    const v = {name:val('fp-name').trim(), type:val('fp-type'), languages:val('fp-lang').trim(), islands, primaryChannel:val('fp-ch1'), backupChannel:val('fp-ch2'), contact:val('fp-contact').trim(), notes:val('fp-notes').trim()};
+    if (!v.name) return formErr('fp-err', 'Enter the organization’s name.');
+    if (!islands.length) return formErr('fp-err', 'Pick at least one island.');
+    const dup = [...S.partners.values()].find(x => x.id !== id && strip(x.name) === strip(v.name));
+    if (dup) return formErr('fp-err', `“${dup.name}” is already listed. Edit that partner instead.`);
+    const pp = piiCheck([['Contact', v.contact], ['Notes', v.notes]], true) || piiCheck([['Notes', v.notes]]); if (pp) return formErr('fp-err', pp);
+    v.updatedAt = now();
+    if (id) { const ok = await w(() => S.db.doc('partners/' + id).update(v), 'Partner saved'); if (ok) log(`Edited partner ${v.name}`); return ok; }
+    v.createdAt = now(); v.createdBy = S.me;
+    let newId = null;
+    const ok = await w(async () => { const ref = await S.db.collection('partners').add(v); newId = ref.id; }, 'Partner added');
+    if (ok) {
+      log(`Added partner ${v.name}`);
+      const t0 = Date.now();
+      const tick = () => { if (S.partners.has(newId)) resourceForm(null, newId); else if (Date.now() - t0 < 4000) setTimeout(tick, 150); };
+      setTimeout(tick, 60);
+    }
+    return ok;
+  }});
+}
+async function delPartner(id){
+  const p = S.partners.get(id); if (!p) return;
+  const rs = [...S.resources.values()].filter(r => r.partnerId === id);
+  const ms = [...S.matches.values()].filter(m => m.partnerId === id);
+  if (!await confirmBox('Delete this partner?', `${esc(p.name)}, its ${rs.length} resource${rs.length === 1 ? '' : 's'} and ${ms.length} match${ms.length === 1 ? '' : 'es'} will be removed for everyone.`)) return;
+  const ok = await w(async () => {
+    await seq(ms, m => S.db.doc('matches/' + m.id).delete());
+    await seq(rs, r => S.db.doc('resources/' + r.id).delete());
+    await S.db.doc('partners/' + id).delete();
+  }, 'Partner deleted');
+  if (ok) log(`Deleted partner ${p.name}`);
+}
+async function mergePartners(keepId, dropId){
+  const a = S.partners.get(keepId), b = S.partners.get(dropId);
+  if (!a || !b) { toast('One of these partners no longer exists.', 'warn'); return false; }
+  const rs = [...S.resources.values()].filter(r => r.partnerId === dropId);
+  const ms = [...S.matches.values()].filter(m => m.partnerId === dropId);
+  if (!await confirmBox('Merge partners?', `Keep <b>${esc(a.name)}</b>. Move ${rs.length} resource${rs.length === 1 ? '' : 's'} and ${ms.length} match${ms.length === 1 ? '' : 'es'} from <b>${esc(b.name)}</b> into it, then delete ${esc(b.name)}.`, 'Merge', false)) return false;
+  const islands = [...new Set([...(a.islands || []), ...(b.islands || [])])];
+  const langs = [...new Set([a.languages, b.languages].join(',').split(/[,;]/).map(s => s.trim()).filter(Boolean))].join(', ');
+  const ok = await w(async () => {
+    await seq(rs, r => S.db.doc('resources/' + r.id).update({partnerId:keepId}));
+    await seq(ms, m => S.db.doc('matches/' + m.id).update({partnerId:keepId}));
+    await S.db.doc('partners/' + keepId).update({islands, languages:langs, backupChannel:a.backupChannel || b.backupChannel || '', contact:a.contact || b.contact || '', updatedAt:now()});
+    await S.db.doc('partners/' + dropId).delete();
+  }, 'Partners merged');
+  if (ok) log(`Merged ${b.name} into ${a.name}`);
+  return ok;
+}
+
+/* ---------- resources ---------- */
+function resourceForm(id, partnerId){
+  const r = id ? S.resources.get(id) : {partnerId, category:'shelter', status:'Available', unit:'people', island:(S.partners.get(partnerId)?.islands || [])[0] || 'Maui'};
+  if (!r) return;
+  const plist = [...S.partners.values()].sort((a, b) => a.name.localeCompare(b.name));
+  if (!plist.length) { toast('Add a partner first.', 'warn'); return; }
+  openDialog(id ? 'Edit resource' : 'Add a resource', `<form class="form" id="f-res" novalidate>
+    <label class="full">Partner<select id="fr-partner">${plist.map(p => `<option value="${esc(p.id)}"${p.id === r.partnerId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
+    <label class="full">Resource<select id="fr-cat">${catOpts(r.category)}</select></label>
+    <label>Island<select id="fr-island">${opts(ISLANDS, r.island)}</select></label>
+    <label>Status<select id="fr-status">${opts(RSTATUS, r.status)}</select></label>
+    <label>Quantity on hand<input id="fr-qty" type="number" min="0" step="1" inputmode="numeric" value="${esc(r.quantity ?? '')}"></label>
+    <label>Unit<input id="fr-unit" maxlength="30" value="${esc(r.unit || '')}"></label>
+    <label class="full">Notes<textarea id="fr-notes" rows="2" maxlength="300" placeholder="e.g., Generator hookup, needs 24 h notice">${esc(r.notes || '')}</textarea></label>
+    <label class="check full"><input type="checkbox" id="fr-conf"${id ? '' : ' checked'}> The partner confirmed this capacity just now</label>
+    <p class="form-err full" id="fr-err" role="alert" hidden></p>
+  </form>`, {submit:id ? 'Save resource' : 'Add resource', form:'f-res', onOpen:d => {
+    $('#fr-cat', d).addEventListener('change', e => { const u = $('#fr-unit', d); if (!u.value || CATS.some(c => c.unit === u.value)) u.value = catOf(e.target.value).unit; });
+  }, onSubmit:async () => {
+    const v = {partnerId:val('fr-partner'), category:val('fr-cat'), island:val('fr-island'), status:val('fr-status'), quantity:Math.round(+val('fr-qty')), unit:val('fr-unit').trim() || catOf(val('fr-cat')).unit, notes:val('fr-notes').trim()};
+    if (!(v.quantity >= 0) || val('fr-qty') === '') return formErr('fr-err', 'Enter how many are on hand (zero is allowed).');
+    const pp = piiCheck([['Notes', v.notes]]); if (pp) return formErr('fr-err', pp);
+    v.cmist = catOf(v.category).cmist; v.updatedAt = now();
+    if ($('#fr-conf').checked) { v.lastConfirmed = now(); v.confirmedBy = S.me; }
+    const label = `${catOf(v.category).label} for ${pName(v.partnerId)}`;
+    if (id) { const ok = await w(() => S.db.doc('resources/' + id).update(v), 'Resource saved'); if (ok) log(`Updated ${label}`); return ok; }
+    v.createdAt = now(); if (!v.lastConfirmed) v.lastConfirmed = null;
+    const ok = await w(() => S.db.collection('resources').add(v), 'Resource added'); if (ok) log(`Added ${label}`); return ok;
+  }});
+}
+async function delResource(id){
+  const r = S.resources.get(id); if (!r) return;
+  const ms = [...S.matches.values()].filter(m => m.resourceId === id);
+  if (!await confirmBox('Delete this resource?', `${esc(catOf(r.category).label)} from ${esc(pName(r.partnerId))}${ms.length ? ` and ${ms.length} match${ms.length === 1 ? '' : 'es'} using it` : ''} will be removed.`)) return;
+  const ok = await w(async () => { await seq(ms, m => S.db.doc('matches/' + m.id).delete()); await S.db.doc('resources/' + id).delete(); }, 'Resource deleted');
+  if (ok) log(`Deleted ${catOf(r.category).label} from ${pName(r.partnerId)}`);
+}
+async function confirmRes(id){
+  const r = S.resources.get(id); if (!r) return;
+  const ok = await w(() => S.db.doc('resources/' + id).update({lastConfirmed:now(), confirmedBy:S.me}), 'Capacity confirmed');
+  if (ok) log(`Confirmed ${catOf(r.category).label} from ${pName(r.partnerId)}`);
+}
+async function confirmAll(pid){
+  const rs = [...S.resources.values()].filter(r => r.partnerId === pid);
+  const ok = await w(() => seq(rs, r => S.db.doc('resources/' + r.id).update({lastConfirmed:now(), confirmedBy:S.me})), `Confirmed ${rs.length} resource${rs.length === 1 ? '' : 's'}`);
+  if (ok) log(`Confirmed all resources from ${pName(pid)}`);
+}
+
+/* ---------- check-in message ---------- */
+function checkinText(p){
+  const rs = [...S.resources.values()].filter(r => r.partnerId === p.id);
+  const L = [`Aloha ${p.name},`, '', `This is the Hawaiʻi DHS ESF-6 mass care desk${S.settings.mode === 'Activated' ? ` (activated for ${S.settings.eventName || 'the current event'})` : ''}. Please confirm what you can provide right now:`, ''];
+  if (rs.length) rs.forEach(r => L.push(`- ${catOf(r.category).label}: ${num(r.quantity)} ${r.unit} on ${r.island}, status ${r.status.toLowerCase()} (last confirmed ${ago(r.lastConfirmed)})`));
+  else L.push('- We have no resources on record for you yet. What could you provide, and on which islands?');
+  L.push('', 'Reply with any changes, or “no change” if this is still right. If you can take on more, tell us what and where.', '', 'Mahalo,', '[Your name, ESF-6 desk, call-back number]');
+  return L.join('\n');
+}
+function checkinDialog(pid){
+  const p = S.partners.get(pid); if (!p) return;
+  const base = checkinText(p);
+  openDialog('Check-in message for ' + p.name, `
+    <p class="small muted">Send this by <b>${esc(p.primaryChannel || 'their usual channel')}</b>${p.backupChannel ? `, or ${esc(p.backupChannel)} as backup` : ''}${p.contact ? ` (${esc(p.contact)})` : ''}. When they reply, update quantities or confirm them as current.</p>
+    <label class="small" for="ci-text" style="font-weight:600">Message</label>
+    <textarea id="ci-text" rows="12" spellcheck="true">${esc(base)}</textarea>
+    <div class="btn-row"><button class="btn sm" type="button" id="ci-copy">Copy message</button><button class="btn sm primary" type="button" id="ci-confirm" data-write>They replied “no change”: confirm all</button></div>
+    <div class="panel stack" data-ai style="padding:14px">
+      <div class="btn-row"><button class="btn sm ai" type="button" id="ci-plain">Make it plainer</button><label class="small" for="ci-lang">Draft translation</label><select id="ci-lang">${opts(DRAFT_LANGS, '', 'Choose language')}</select><button class="btn sm ai" type="button" id="ci-tr">Draft</button><button class="btn sm" type="button" id="ci-stop" hidden>Stop</button></div>
+      <p class="ai-note" id="ci-note">Translations are drafts. A qualified translator must review them before sending.</p>
+    </div>`, {noFocus:true, onOpen:d => {
+    $('#ci-copy', d).onclick = () => copyText($('#ci-text', d).value, $('#ci-text', d));
+    $('#ci-confirm', d).onclick = async () => { await confirmAll(pid); closeDialog(); };
+    const run = async (prompt, label) => {
+      if (!S.sample) return;
+      S.ciCtl?.abort(); const ctl = S.ciCtl = new AbortController();
+      const ta = $('#ci-text', d), note = $('#ci-note', d), stop = $('#ci-stop', d);
+      const before = ta.value; note.textContent = 'Thinking…'; stop.hidden = false; stop.onclick = () => ctl.abort();
+      try {
+        await S.sample(prompt, {signal:ctl.signal, modelTier:'quick', cache:false, onText:({text}) => { ta.value = text; }});
+        note.textContent = label;
+      } catch (e) { if (e.code !== 'cancelled') { ta.value = e.text || before; note.textContent = aiErr(e) || 'Stopped.'; } else { ta.value = e.text || before; note.textContent = 'Stopped.'; } }
+      finally { stop.hidden = true; }
+    };
+    $('#ci-plain', d).onclick = () => run(`Rewrite this message to a community partner in plain language at a 6th-grade reading level. Keep every fact, number, place name (with Hawaiian ʻokina and kahakō exactly as written) and the bracketed signature line. Keep it warm and brief. Reply with only the message.\n\n${$('#ci-text', d).value}`, 'Rewritten in plain language. Check it before sending.');
+    $('#ci-tr', d).onclick = () => { const lang = $('#ci-lang', d).value; if (!lang) { $('#ci-note', d).textContent = 'Choose a language first.'; return; } run(`Translate this message into ${lang}. Keep numbers, organization names, Hawaiian place names (with ʻokina and kahakō) and the bracketed signature line unchanged. Put this line first, in English: "DRAFT TRANSLATION – needs qualified translator review before sending." Reply with only the translated message.\n\n${base}`, `Draft ${lang} translation. A qualified translator must review it before sending.`); };
+  }});
+}
+
+/* ---------- duplicates ---------- */
+function bigrams(s){ const t = strip(s).replace(/\b(the|inc|llc|of|and|hawaii|org|organization|assn|association|association|co|company)\b/g, '').replace(/[^a-z0-9]/g, ''); const out = []; for (let i = 0; i < t.length - 1; i++) out.push(t.slice(i, i + 2)); return out; }
+function sim(a, b){ const A = bigrams(a), B = bigrams(b); if (!A.length || !B.length) return strip(a) === strip(b) ? 1 : 0; const m = new Map(); A.forEach(x => m.set(x, (m.get(x) || 0) + 1)); let hit = 0; B.forEach(x => { const c = m.get(x); if (c) { hit++; m.set(x, c - 1); } }); return 2 * hit / (A.length + B.length); }
+function ruleDupes(){
+  const ps = [...S.partners.values()], out = [];
+  for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+    const s = sim(ps[i].name, ps[j].name);
+    if (s >= 0.72) {
+      const [keep, drop] = (ps[i].createdAt || '') <= (ps[j].createdAt || '') ? [ps[i], ps[j]] : [ps[j], ps[i]];
+      out.push({keepId:keep.id, dropId:drop.id, reason:`Names are ${Math.round(s * 100)}% similar`, confidence:s > 0.9 ? 'High' : 'Medium', src:'rule'});
+    }
+  }
+  return out;
+}
+function dupesDialog(){
+  S.dupAI = S.dupAI || [];
+  openDialog('Possible duplicate partners', `<p class="small muted">Duplicates split resources across two records, so gaps look bigger than they are. Merging keeps the first partner and moves everything from the second into it.</p><div id="dup-list"></div><div class="panel stack" data-ai style="padding:14px"><div class="btn-row"><button class="btn sm ai" type="button" id="dup-ai">Check with AI</button><button class="btn sm" type="button" id="dup-stop" hidden>Stop</button></div><p class="ai-note" id="dup-note">AI also catches abbreviations and different spellings of the same organization.</p></div>`, {wide:true, noFocus:true, ctx:{type:'dupes'}, onOpen:d => {
+    renderDupes();
+    $('#dup-ai', d).onclick = async () => {
+      if (!S.sample) return;
+      S.dupCtl?.abort(); const ctl = S.dupCtl = new AbortController();
+      const note = $('#dup-note', d), stop = $('#dup-stop', d); note.textContent = 'Thinking…'; stop.hidden = false; stop.onclick = () => ctl.abort();
+      const list = [...S.partners.values()].slice(0, 250).map(p => ({id:p.id, name:p.name, type:p.type, islands:p.islands, contact:p.contact || ''}));
+      try {
+        const res = await S.sample.json(`These are emergency-management partner organizations in Hawaiʻi. Find pairs that are probably the SAME organization entered twice (abbreviations, typos, "Assn" vs "Association", with or without island name). Do not pair organizations that are merely similar or related (e.g., two different churches). Use only the ids given.\nReply with only a JSON array: [{"keepId":"...","dropId":"...","reason":"one short sentence","confidence":"High"|"Medium"|"Low"}]. Keep the more complete record as keepId. Return [] if none.\n\nPARTNERS:\n${JSON.stringify(list)}`, {signal:ctl.signal, modelTier:'default'});
+        const ok = (Array.isArray(res) ? res : []).filter(x => x && S.partners.has(String(x.keepId)) && S.partners.has(String(x.dropId)) && x.keepId !== x.dropId).map(x => ({keepId:String(x.keepId), dropId:String(x.dropId), reason:String(x.reason || '').slice(0, 200), confidence:['High','Medium','Low'].includes(x.confidence) ? x.confidence : 'Low', src:'ai'}));
+        S.dupAI = ok; note.textContent = ok.length ? `AI found ${ok.length} possible pair${ok.length === 1 ? '' : 's'}. Review each before merging.` : 'AI found no likely duplicates.';
+        renderDupes();
+      } catch (e) { note.textContent = aiErr(e) || 'Stopped.'; }
+      finally { stop.hidden = true; }
+    };
+  }});
+}
+function renderDupes(){
+  const el = $('#dup-list'); if (!el) return;
+  const seen = new Set(), list = [];
+  [...ruleDupes(), ...(S.dupAI || [])].forEach(x => { const k = [x.keepId, x.dropId].sort().join('|'); if (seen.has(k) || S.dismissed.has(k) || !S.partners.has(x.keepId) || !S.partners.has(x.dropId)) return; seen.add(k); list.push(x); });
+  el.innerHTML = list.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Keep</th><th>Merge in</th><th>Why</th><th><span class="sr">Actions</span></th></tr></thead><tbody>${list.map(x => {
+    const a = S.partners.get(x.keepId), b = S.partners.get(x.dropId), k = [x.keepId, x.dropId].sort().join('|');
+    return `<tr><td><div class="t-main">${esc(a.name)}</div><div class="t-sub">${esc((a.islands || []).join(', '))}</div></td><td><div class="t-main">${esc(b.name)}</div><div class="t-sub">${esc((b.islands || []).join(', '))}</div></td><td>${esc(x.reason)}<div class="reasons"><span class="chip ${x.confidence === 'High' ? 'crit' : x.confidence === 'Medium' ? 'warn' : ''}">${esc(x.confidence)} confidence</span>${x.src === 'ai' ? '<span class="chip ai">AI</span>' : ''}</div></td><td><div class="acts"><button class="btn sm primary" type="button" data-action="merge" data-keep="${esc(x.keepId)}" data-drop="${esc(x.dropId)}" data-write>Merge</button><button class="btn sm ghost" type="button" data-action="swap-dupe" data-keep="${esc(x.keepId)}" data-drop="${esc(x.dropId)}">Keep the other</button><button class="btn sm ghost" type="button" data-action="dismiss-dupe" data-k="${esc(k)}">Not a duplicate</button></div></td></tr>`;
+  }).join('')}</tbody></table></div>` : '<p class="muted">No likely duplicates found.</p>';
+  applyRO(el);
+}
+
+/* ---------- match dialog ---------- */
+function matchDialog(id){
+  if (!S.needs.has(id)) return;
+  openDialog('Matches for this need', '<div id="md-body"></div>', {wide:true, noFocus:true, ctx:{type:'match', id}, onOpen:() => renderMatchBody()});
+}
+function renderMatchBody(){
+  const body = $('#md-body'); if (!body || !S.dlg) return;
+  const n = S.needs.get(S.dlg.id);
+  if (!n) { body.innerHTML = '<p class="muted">This need was removed.</p>'; return; }
+  const keep = {}; $$('input,select', body).forEach(el => { if (el.id) keep[el.id] = el.value; });
+  const aiOut = $('#md-ai-out', body)?.textContent || '';
+  const s = needStats(n);
+  const ms = [...S.matches.values()].filter(m => m.needId === n.id).sort((a, b) => (a.status > b.status ? 1 : -1));
+  const cs = candidates(n);
+  body.innerHTML = `
+    <div class="need-sum">${cmBadge(n.cmist)}<div style="flex:1;min-width:0"><div class="li-title">${esc(n.title)}</div><div class="li-sub">${prioTag(n.priority)} · ${esc(n.island)}${n.area ? ', ' + esc(n.area) : ''} · ${esc(catOf(n.category).label)} · ${esc(n.hazard)} · source: ${esc(n.basis || 'not given')}</div></div>
+      <div class="kpi" style="padding:8px 12px;border:0;background:none"><span class="k-label">Gap</span><span class="k-val" style="font-size:22px;${s.gap ? 'color:var(--crit)' : 'color:var(--good)'}">${num(s.gap)}</span><span class="k-note">of ${num(n.quantity)} ${esc(n.unit)} · ${num(s.prop)} proposed</span></div></div>
+    <div><h3 style="margin-bottom:8px">Partners on this need</h3>${ms.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Partner</th><th class="n">Qty</th><th>Role</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead><tbody>${ms.map(m => `<tr><td><div class="t-main">${esc(pName(m.partnerId))}</div>${m.rationale ? `<div class="t-sub">${esc(m.rationale)}</div>` : ''}</td><td class="n">${num(m.quantity)}</td><td><span class="chip ${m.role === 'Lead' ? 'accent' : ''}">${esc(m.role)}</span></td><td>${statusChip(m.status)}${m.aiSuggested ? ' <span class="chip ai">AI</span>' : ''}</td><td><div class="acts">${m.status === 'Proposed' ? `<button class="btn sm primary" type="button" data-action="m-confirm" data-id="${esc(m.id)}" data-write>Confirm</button><button class="btn sm" type="button" data-action="m-decline" data-id="${esc(m.id)}" data-write>Decline</button>` : `<button class="btn sm" type="button" data-action="m-reopen" data-id="${esc(m.id)}" data-write>Reopen</button>`}<button class="btn sm ghost" type="button" data-action="m-role" data-id="${esc(m.id)}" data-write>${m.role === 'Lead' ? 'Make support' : 'Make lead'}</button><button class="btn sm ghost danger" type="button" data-action="m-remove" data-id="${esc(m.id)}" data-write>Remove</button></div></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted small">No partners matched yet.</p>'}</div>
+    <div><h3 style="margin-bottom:4px">Candidate resources</h3><p class="small muted" style="margin-bottom:8px">Ranked by how much of the gap they cover, how recently capacity was confirmed, status, and island. Same category only; statewide resources need inter-island lift.</p>
+    ${cs.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">Score</th><th>Partner and resource</th><th class="n">Free</th><th>Quantity</th><th>Role</th><th><span class="sr">Propose</span></th></tr></thead><tbody>${cs.map(c => {
+      const qid = 'mq-' + c.r.id, rid = 'mr-' + c.r.id;
+      const defQ = Math.max(1, Math.min(c.avail, s.gap || c.avail));
+      return `<tr><td class="n"><span class="score">${c.score}</span></td><td><div class="t-main">${esc(c.p ? c.p.name : 'Unknown')}</div><div class="t-sub">${esc(catOf(c.r.category).label)} · ${esc(c.r.island)} · ${esc(c.r.status)}</div><div class="reasons">${c.reasons.map(x => `<span class="chip ${x.k}">${esc(x.t)}</span>`).join('')}</div></td><td class="n">${num(c.avail)}<div class="t-sub">${esc(c.r.unit)}</div></td><td><label class="sr" for="${qid}">Quantity</label><input class="qty-in" id="${qid}" type="number" min="1" max="${c.avail}" step="1" value="${esc(keep[qid] ?? defQ)}"></td><td><label class="sr" for="${rid}">Role</label><select id="${rid}">${opts(['Lead','Support'], keep[rid] ?? (s.lead || s.propLead ? 'Support' : 'Lead'))}</select></td><td><button class="btn sm primary" type="button" data-action="propose" data-need="${esc(n.id)}" data-res="${esc(c.r.id)}" data-write>Propose</button></td></tr>`;
+    }).join('')}</tbody></table></div>` : `<div class="banner warn"><div><b>No partner resource fits this need.</b> Nobody has free ${esc(catOf(n.category).label.toLowerCase())} on ${esc(n.island)} or statewide. Ask partners on this island, or escalate the gap to the State ESF-6 desk.</div></div>`}</div>
+    <div class="panel stack" data-ai style="padding:14px"><div class="btn-row"><button class="btn sm ai" type="button" id="md-ai">Explain the best options</button><button class="btn sm" type="button" id="md-ai-stop" hidden>Stop</button></div><div class="ai-out" id="md-ai-out" aria-live="polite"></div></div>`;
+  applyRO(body); applyAI();
+  if (aiOut) $('#md-ai-out', body).textContent = aiOut;
+  $('#md-ai', body).onclick = async () => {
+    if (!S.sample) return;
+    S.matchCtl?.abort(); const ctl = S.matchCtl = new AbortController();
+    const out = $('#md-ai-out'), stop = $('#md-ai-stop'); out.textContent = 'Thinking…'; stop.hidden = false; stop.onclick = () => ctl.abort();
+    const payload = {need:{id:'need:' + n.id, title:n.title, island:n.island, area:n.area, category:catOf(n.category).label, priority:n.priority, needed:n.quantity, unit:n.unit, gap:s.gap, hazard:n.hazard}, candidates:cs.slice(0, 12).map(c => ({id:'res:' + c.r.id, partner:c.p ? c.p.name : 'Unknown', partnerType:c.p?.type, island:c.r.island, available:c.avail, status:c.r.status, lastConfirmed:c.r.lastConfirmed, stale:c.stale, score:c.score, channels:[c.p?.primaryChannel, c.p?.backupChannel].filter(Boolean)}))};
+    try {
+      await S.sample(`You support Hawaiʻi DHS ESF-6 staff deciding which partner should meet a mass care need for people with access and functional needs. Using ONLY the data below, recommend which candidate(s) to propose, which should lead, and the main risk with each (stale capacity, inter-island lift, limited status). If no candidate fits, say so and say what to do next. Cite candidates by id in brackets. Plain language, under 150 words, no headings. A person makes the final decision.\n\n${JSON.stringify(payload)}`, {signal:ctl.signal, onText:({text}) => { out.textContent = text; }});
+    } catch (e) { out.textContent = (e.text ? e.text + '\n\n' : '') + (aiErr(e) || 'Stopped.'); }
+    finally { stop.hidden = true; }
+  };
+}
+async function propose(needId, resId){
+  const n = S.needs.get(needId), r = S.resources.get(resId);
+  if (!n || !r) return;
+  const q = Math.round(+val('mq-' + resId)), role = val('mr-' + resId) || 'Support';
+  const {avail} = resUse(r);
+  if (!(q > 0)) { toast('Enter a quantity above zero.', 'warn'); return; }
+  if (q > avail) { toast(`Only ${num(avail)} ${r.unit} are free from this partner.`, 'warn'); return; }
+  const s = needStats(n);
+  if (role === 'Lead' && (s.lead || s.propLead)) { toast('This need already has a lead. Propose as support, or change the lead first.', 'warn'); return; }
+  const ok = await w(() => S.db.collection('matches').add({needId, resourceId:resId, partnerId:r.partnerId, quantity:q, role, status:'Proposed', aiSuggested:false, rationale:'', createdAt:now(), createdBy:S.me}), 'Match proposed');
+  if (ok) log(`Proposed ${pName(r.partnerId)} for “${n.title}” (${num(q)} ${r.unit}, ${role.toLowerCase()})`);
+}
+
+/* ---------- match decisions ---------- */
+async function mConfirm(id){
+  const m = S.matches.get(id); if (!m) return;
+  const n = S.needs.get(m.needId);
+  const patch = {status:'Confirmed', decidedBy:S.me, decidedAt:now()};
+  if (m.role === 'Lead' && n && needStats(n).lead) { patch.role = 'Support'; toast('This need already had a confirmed lead, so this partner was confirmed as support.', 'warn'); }
+  const ok = await w(() => S.db.doc('matches/' + id).update(patch), 'Match confirmed');
+  if (ok) log(`Confirmed ${pName(m.partnerId)} for “${n ? n.title : 'a need'}”${(patch.role || m.role) === 'Lead' ? ' as lead' : ''}`);
+}
+async function mDecline(id){
+  const m = S.matches.get(id); if (!m) return;
+  const ok = await w(() => S.db.doc('matches/' + id).update({status:'Declined', decidedBy:S.me, decidedAt:now()}), 'Match declined');
+  if (ok) log(`Declined ${pName(m.partnerId)} for “${S.needs.get(m.needId)?.title || 'a need'}”`);
+}
+async function mReopen(id){
+  const m = S.matches.get(id); if (!m) return;
+  if (m.status === 'Declined') { const r = S.resources.get(m.resourceId); if (r && resUse(r).avail < (+m.quantity || 0)) { toast('That resource no longer has enough free capacity to reopen this match.', 'warn'); return; } }
+  const ok = await w(() => S.db.doc('matches/' + id).update({status:'Proposed', decidedBy:null, decidedAt:null}), 'Match reopened');
+  if (ok) log(`Reopened match for ${pName(m.partnerId)}`);
+}
+async function mRole(id){
+  const m = S.matches.get(id); if (!m) return;
+  if (m.role === 'Lead') { const ok = await w(() => S.db.doc('matches/' + id).update({role:'Support'}), 'Changed to support'); if (ok) log(`${pName(m.partnerId)} changed to support`); return; }
+  const others = [...S.matches.values()].filter(x => x.needId === m.needId && x.id !== id && x.role === 'Lead' && x.status !== 'Declined');
+  const ok = await w(async () => { await seq(others, x => S.db.doc('matches/' + x.id).update({role:'Support'})); await S.db.doc('matches/' + id).update({role:'Lead'}); }, 'Lead partner set');
+  if (ok) log(`${pName(m.partnerId)} set as lead for “${S.needs.get(m.needId)?.title || 'a need'}”`);
+}
+async function mRemove(id){
+  const m = S.matches.get(id); if (!m) return;
+  if (!await confirmBox('Remove this match?', `${esc(pName(m.partnerId))} will no longer be listed on this need. Its capacity is freed for other needs.`, 'Remove')) return;
+  const ok = await w(() => S.db.doc('matches/' + id).delete(), 'Match removed');
+  if (ok) log(`Removed ${pName(m.partnerId)} from “${S.needs.get(m.needId)?.title || 'a need'}”`);
+}
+
+/* ---------- auto-match + AI suggest + preview ---------- */
+function autoMatchPlan(){
+  const extra = {}, plan = [];
+  const needs = [...S.needs.values()].map(n => ({n, s:needStats(n)})).filter(x => x.s.gap - x.s.prop > 0)
+    .sort((a, b) => (PRANK[a.n.priority] ?? 2) - (PRANK[b.n.priority] ?? 2) || (b.s.gap - b.s.prop) - (a.s.gap - a.s.prop));
+  for (const {n, s} of needs) {
+    let gap = s.gap - s.prop, hasLead = !!(s.lead || s.propLead);
+    for (const c of candidates(n, extra, gap)) {
+      if (gap <= 0) break;
+      const q = Math.min(gap, c.avail); if (q <= 0) continue;
+      plan.push({needId:n.id, resourceId:c.r.id, quantity:q, role:hasLead ? 'Support' : 'Lead', rationale:`Rule-based: score ${c.score}. ${c.reasons.map(r => r.t).join('; ')}.`, ai:false});
+      hasLead = true; gap -= q; extra[c.r.id] = (extra[c.r.id] || 0) + q;
+    }
+  }
+  return plan;
+}
+function previewDialog(plan, title, intro){
+  if (!plan.length) { openDialog(title, `<p>${esc(intro)}</p><p class="muted">No new matches could be proposed. Either every need is covered or proposed, or no partner has free capacity of the right kind on the right island. Check the gaps on the Overview and reach out to partners.</p>`); return; }
+  openDialog(title, `<p class="small muted">${esc(intro)} Nothing is saved until you add them. Each one then waits on the board for a person to confirm.</p>
+    <form id="f-prev"><div class="tbl-wrap"><table class="tbl"><thead><tr><th><span class="sr">Include</span></th><th>Need</th><th>Partner and resource</th><th class="n">Qty</th><th>Role</th><th>Why</th></tr></thead><tbody>${plan.map((x, i) => { const n = S.needs.get(x.needId), r = S.resources.get(x.resourceId); return `<tr><td><input type="checkbox" id="pv-${i}" checked aria-label="Include this match"></td><td><div class="t-main">${esc(n.title)}</div><div class="t-sub">${prioTag(n.priority)} · ${esc(n.island)}</div></td><td><div class="t-main">${esc(pName(r.partnerId))}</div><div class="t-sub">${esc(catOf(r.category).label)} · ${esc(r.island)}</div></td><td class="n">${num(x.quantity)}</td><td><span class="chip ${x.role === 'Lead' ? 'accent' : ''}">${esc(x.role)}</span></td><td class="small">${esc(x.rationale)}${x.ai ? ' <span class="chip ai">AI</span>' : ''}</td></tr>`; }).join('')}</tbody></table></div></form>`,
+  {wide:true, noFocus:true, submit:'Add selected proposals', form:'f-prev', onSubmit:async () => {
+    const pick = plan.filter((_, i) => $('#pv-' + i)?.checked);
+    if (!pick.length) { toast('Nothing selected.', 'warn'); return false; }
+    const ok = await w(() => seq(pick, x => { const r = S.resources.get(x.resourceId); return S.db.collection('matches').add({needId:x.needId, resourceId:x.resourceId, partnerId:r.partnerId, quantity:x.quantity, role:x.role, status:'Proposed', aiSuggested:!!x.ai, rationale:x.rationale, createdAt:now(), createdBy:S.me}); }), `Proposed ${pick.length} match${pick.length === 1 ? '' : 'es'}. Confirm them on the Match board.`);
+    if (ok) { log(`${pick.some(x => x.ai) ? 'AI-suggested' : 'Auto-matched'} ${pick.length} proposal${pick.length === 1 ? '' : 's'}`); if (S.view !== 'board') location.hash = 'board'; }
+    return ok;
+  }});
+}
+function autoMatch(){ previewDialog(autoMatchPlan(), 'Auto-match open needs', 'Life-safety needs first, then by gap size. Each need gets the best-scoring partners until its gap is filled.'); }
+async function aiMatch(){
+  if (!S.sample) return;
+  const open = [...S.needs.values()].map(n => ({n, s:needStats(n)})).filter(x => x.s.gap - x.s.prop > 0);
+  if (!open.length) { previewDialog([], 'Suggest matches with AI', 'Every need is already covered or has proposals.'); return; }
+  const needs = open.slice(0, 120).map(({n, s}) => ({needId:n.id, title:n.title, island:n.island, area:n.area || '', category:n.category, priority:n.priority, gap:s.gap - s.prop, unit:n.unit, hasLead:!!(s.lead || s.propLead)}));
+  const res = [...S.resources.values()].filter(r => r.status !== 'Unavailable' && r.status !== 'Committed').map(r => ({r, u:resUse(r)})).filter(x => x.u.avail > 0).slice(0, 250).map(({r, u}) => ({resourceId:r.id, partner:pName(r.partnerId), category:r.category, island:r.island, available:u.avail, unit:r.unit, status:r.status, stale:isStale(r)}));
+  S.aiMatchCtl?.abort(); const ctl = S.aiMatchCtl = new AbortController();
+  openDialog('Suggest matches with AI', `<p id="aim-status">Thinking… This can take up to a minute.</p><div class="btn-row"><button class="btn sm" type="button" id="aim-stop">Stop</button></div>`, {noFocus:true, onOpen:d => { $('#aim-stop', d).onclick = () => ctl.abort(); }});
+  try {
+    const out = await S.sample.json(`You help Hawaiʻi DHS ESF-6 staff match unmet mass care needs (for people with access and functional needs) to partner resources. Use ONLY the records below. Never invent partners, resources or quantities.\nRules:\n- Match a need only to a resource with the same category ("afn_shelter" may also serve "shelter").\n- The resource island must equal the need island, or be "Statewide" (then say inter-island lift is needed).\n- quantity must be ≤ the resource's available and ≤ the need's gap; across all your suggestions, never exceed a resource's available in total.\n- Prefer life-safety needs, status "Available", and stale:false resources.\n- At most one "Lead" per need, and none if hasLead is true; others are "Support".\n- rationale: one plain sentence, 25 words or fewer.\nReply with only a JSON array: [{"needId":"...","resourceId":"...","quantity":number,"role":"Lead"|"Support","rationale":"..."}]. Return [] if nothing fits.\n\nNEEDS:\n${JSON.stringify(needs)}\n\nRESOURCES:\n${JSON.stringify(res)}`, {signal:ctl.signal});
+    const extra = {}, gaps = {}, leads = {}; needs.forEach(x => { gaps[x.needId] = x.gap; leads[x.needId] = x.hasLead; });
+    const plan = [];
+    for (const x of (Array.isArray(out) ? out : [])) {
+      const n = S.needs.get(String(x?.needId)), r = S.resources.get(String(x?.resourceId));
+      if (!n || !r || !compatible(n.category, r.category) || (r.island !== n.island && r.island !== 'Statewide')) continue;
+      const free = resUse(r, extra).avail;
+      const q = Math.min(Math.round(+x.quantity || 0), free, gaps[n.id] ?? 0);
+      if (q <= 0) continue;
+      let role = x.role === 'Lead' && !leads[n.id] ? 'Lead' : 'Support'; if (role === 'Lead') leads[n.id] = true;
+      plan.push({needId:n.id, resourceId:r.id, quantity:q, role, rationale:String(x.rationale || '').slice(0, 220), ai:true});
+      extra[r.id] = (extra[r.id] || 0) + q; gaps[n.id] -= q;
+    }
+    if ($('#dlg').open) previewDialog(plan, 'AI-suggested matches', 'Claude suggested these from the records. Each was checked against category, island and free capacity.');
+  } catch (e) {
+    const st = $('#aim-status'); if (st) st.textContent = aiErr(e) || 'Stopped.';
+  }
+}
+
+/* ---------- event settings ---------- */
+function eventSettings(){
+  const st = S.settings;
+  openDialog('Event settings', `<form class="form" id="f-ev" novalidate>
+    <label class="full">Event or planning cycle name<input id="fe-name" maxlength="100" value="${esc(st.eventName || '')}" placeholder="e.g., Maui wildfire exercise 2026"></label>
+    <label>Mode<select id="fe-mode">${opts(['Planning','Activated'], st.mode || 'Planning')}</select></label>
+    <label>Hazard<select id="fe-hazard">${opts(HAZARDS, st.hazard, 'Not set')}</select></label>
+    <fieldset class="full"><legend>Islands affected</legend>${PLACE_ISLANDS.map((i, k) => `<label class="check"><input type="checkbox" id="fe-i${k}"${(st.islands || []).includes(i) ? ' checked' : ''}> ${esc(i)}</label>`).join('')}</fieldset>
+    <label>Re-confirm in planning after (days)<input id="fe-sp" type="number" min="1" max="365" value="${esc(st.stalePlanningDays || 30)}"></label>
+    <label>Re-confirm when activated after (hours)<input id="fe-sa" type="number" min="1" max="168" value="${esc(st.staleActivatedHours || 12)}"></label>
+    <p class="hint full">Activated mode tightens how fresh partner capacity must be, and shows the event on every screen.</p>
+    <p class="form-err full" id="fe-err" role="alert" hidden></p>
+  </form>`, {submit:'Save settings', form:'f-ev', onSubmit:async () => {
+    const v = {eventName:val('fe-name').trim(), mode:val('fe-mode'), hazard:val('fe-hazard'), islands:PLACE_ISLANDS.filter((_, k) => $('#fe-i' + k)?.checked), stalePlanningDays:Math.max(1, Math.round(+val('fe-sp') || 30)), staleActivatedHours:Math.max(1, Math.round(+val('fe-sa') || 12)), updatedAt:now(), updatedBy:S.me};
+    const changed = v.mode !== (st.mode || 'Planning');
+    const ok = await w(() => S.db.doc('settings/current').set(v), 'Settings saved');
+    if (ok && changed) log(v.mode === 'Activated' ? `Activated for ${v.eventName || 'an event'}` : 'Returned to planning mode');
+    return ok;
+  }});
+}
+
+/* ---------- briefing actions ---------- */
+async function aiBrief(){
+  if (!S.sample) return;
+  S.briefCtl?.abort(); const ctl = S.briefCtl = new AbortController();
+  const out = $('#ai-brief-out'), stop = $('#ai-brief-stop'), copy = $('#ai-brief-copy'), btn = $('#ai-brief-btn');
+  out.textContent = 'Thinking…'; stop.hidden = false; copy.hidden = true; btn.disabled = true; stop.onclick = () => ctl.abort();
+  try {
+    const {text, truncated} = await S.sample(`You are writing a leadership briefing for the Hawaiʻi DHS ESF-6 (Mass Care) desk, which supports county-led mass care for people with access and functional needs (CMIST: communication, medical, independence, safety and support, transportation).\nUse ONLY the JSON records below. Do not invent facts, numbers, partners or places. If something important is not in the data, say it is not known.\nWrite 250 to 400 words in plain language with these short sections: Situation; Biggest gaps (life-safety first); Decisions needed now (say who decides: county mass care lead or State ESF-6); Capacity to re-confirm (stale records); Next 12 hours. After each specific claim cite the record id in brackets, e.g. [need:abc]. Keep Hawaiian place names with ʻokina and kahakō. Stay neutral and factual.\n\nRECORDS:\n${JSON.stringify(dataForAI())}`, {signal:ctl.signal, cache:false, onText:({text}) => { out.textContent = text; }});
+    S.aiBriefText = text + (truncated ? '\n\n[Cut short. Ask for a shorter briefing.]' : '');
+    out.textContent = S.aiBriefText; copy.hidden = false;
+  } catch (e) { out.textContent = (e.text ? e.text + '\n\n' : '') + (aiErr(e) || 'Stopped.'); S.aiBriefText = e.text || ''; copy.hidden = !e.text; }
+  finally { stop.hidden = true; btn.disabled = false; }
+}
+async function ask(){
+  if (!S.sample) return;
+  const q = val('ask-q').trim(); if (!q) { $('#ask-q').focus(); return; }
+  S.askCtl?.abort(); const ctl = S.askCtl = new AbortController();
+  const out = $('#ask-out'), btn = $('#ask-btn'); out.textContent = 'Thinking…'; btn.disabled = true;
+  try {
+    await S.sample(`Answer a question from Hawaiʻi DHS ESF-6 staff using ONLY the JSON records below. Be brief and specific (under 150 words). Cite record ids in brackets after each claim, e.g. [need:abc]. If the records do not answer the question, say "I don't have data for that in these records" and suggest which partner, agency or dataset could answer it. Never invent numbers or names. Keep Hawaiian place names with ʻokina and kahakō.\n\nQUESTION: ${q}\n\nRECORDS:\n${JSON.stringify(dataForAI())}`, {signal:ctl.signal, onText:({text}) => { out.textContent = text; }});
+  } catch (e) { out.textContent = (e.text ? e.text + '\n\n' : '') + (aiErr(e) || 'Stopped.'); }
+  finally { btn.disabled = false; }
+}
+function fieldSheet(){
+  const st = S.settings;
+  const needs = [...S.needs.values()].map(n => ({n, s:needStats(n)})).sort((a, b) => (PRANK[a.n.priority] ?? 2) - (PRANK[b.n.priority] ?? 2));
+  const conf = [...S.matches.values()].filter(m => m.status === 'Confirmed');
+  const e = esc;
+  const rows = needs.map(({n, s}) => {
+    const ms = conf.filter(m => m.needId === n.id);
+    const partners = ms.map(m => { const p = S.partners.get(m.partnerId); return `${e(p ? p.name : 'Unknown')} (${m.role}, ${num(m.quantity)})${p ? ' – ' + e(p.primaryChannel || '') + (p.contact ? ': ' + e(p.contact) : '') + (p.backupChannel ? '; backup ' + e(p.backupChannel) : '') : ''}`; }).join('<br>') || '<b>None confirmed</b>';
+    return `<tr><td>${e(n.priority)}</td><td><b>${e(n.title)}</b><br>${e(catOf(n.category).label)}</td><td>${e(n.island)}${n.area ? '<br>' + e(n.area) : ''}</td><td>${num(n.quantity)} ${e(n.unit)}</td><td>${num(s.gap)}</td><td>${partners}</td></tr>`;
+  }).join('');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ESF-6 field sheet</title><style>body{font:14px/1.45 system-ui,sans-serif;color:#111;margin:24px;max-width:1000px}h1{font-size:20px;margin:0 0 4px}p{margin:0 0 12px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:6px 8px;text-align:left;vertical-align:top}th{background:#eee}</style></head><body><h1>ESF-6 field sheet: needs, lead partners and how to reach them</h1><p>${e(st.mode === 'Activated' ? 'ACTIVATED: ' + (st.eventName || 'Event') : 'Planning mode')} · Printed from Kōkua Match ${e(hst())}. Works offline. Capacity changes fast: confirm before relying on it.</p><table><thead><tr><th>Priority</th><th>Need</th><th>Island / area</th><th>Needed</th><th>Gap</th><th>Confirmed partners and contact route</th></tr></thead><tbody>${rows || '<tr><td colspan="6">No needs recorded.</td></tr>'}</tbody></table></body></html>`;
+}
+function planCSV(){
+  const rows = [['need','island','area','hazard','category','priority','needed','unit','confirmed','gap','basis','partner','role','match_status','match_quantity','partner_primary_channel','partner_contact']];
+  S.needs.forEach(n => {
+    const s = needStats(n);
+    const ms = [...S.matches.values()].filter(m => m.needId === n.id && m.status !== 'Declined');
+    const base = [n.title, n.island, n.area || '', n.hazard, catOf(n.category).label, n.priority, n.quantity, n.unit, s.conf, s.gap, n.basis || ''];
+    if (!ms.length) rows.push([...base, '', '', '', '', '', '']);
+    ms.forEach(m => { const p = S.partners.get(m.partnerId); rows.push([...base, p ? p.name : '', m.role, m.status, m.quantity, p?.primaryChannel || '', p?.contact || '']); });
+  });
+  return csvRows(rows);
+}
+function partnersCSV(){
+  const rows = [TPL_P.split(',')];
+  S.partners.forEach(p => {
+    const rs = [...S.resources.values()].filter(r => r.partnerId === p.id);
+    const base = [p.name, p.type, (p.islands || []).join(';'), p.contact || '', p.primaryChannel || '', p.backupChannel || '', (p.languages || '').replace(/,\s*/g, ';')];
+    if (!rs.length) rows.push([...base, '', '', '', '', '', '', p.notes || '']);
+    rs.forEach(r => rows.push([...base, catOf(r.category).label, r.island, r.quantity, r.unit, r.status, r.lastConfirmed ? r.lastConfirmed.slice(0, 10) : '', r.notes || '']));
+  });
+  return csvRows(rows);
+}
+function needsCSV(){
+  const rows = [[...TPL_N.split(','), 'confirmed', 'gap', 'status']];
+  S.needs.forEach(n => { const s = needStats(n); rows.push([n.title, n.island, n.area || '', n.hazard, catOf(n.category).label, n.quantity, n.unit, n.priority, n.basis || '', n.notes || '', s.conf, s.gap, s.status]); });
+  return csvRows(rows);
+}
+function matchesCSV(){
+  const rows = [['need','island','partner','resource','quantity','unit','role','status','ai_suggested','rationale','created','decided']];
+  S.matches.forEach(m => { const n = S.needs.get(m.needId), r = S.resources.get(m.resourceId); rows.push([n ? n.title : '', n ? n.island : '', pName(m.partnerId), r ? catOf(r.category).label : '', m.quantity, r ? r.unit : '', m.role, m.status, m.aiSuggested ? 'yes' : 'no', m.rationale || '', m.createdAt || '', m.decidedAt || '']); });
+  return csvRows(rows);
+}
+const stamp = () => new Date().toISOString().slice(0, 10);
+
+/* ---------- import ---------- */
+function checkImport(which){
+  const text = val('imp-' + which), msg = $('#imp-' + which + '-msg'), go = $('#imp-' + which + '-go');
+  S.pending[which] = null; go.disabled = true;
+  const {head, items} = parseCSV(text);
+  if (!items.length) { msg.className = 'msg bad'; msg.textContent = 'No rows found. Paste CSV with a header row, or choose a file.'; return; }
+  const errs = [], good = [];
+  if (which === 'p') {
+    if (!head.includes('partner_name')) { msg.className = 'msg bad'; msg.textContent = 'The header must include partner_name. Copy the template to see all columns.'; return; }
+    const known = new Map([...S.partners.values()].map(p => [strip(p.name), p.id]));
+    const newP = new Map(); let resN = 0;
+    for (const r of items) {
+      const e = [];
+      if (!r.partner_name) e.push('partner_name is empty');
+      const islands = (r.islands || '').split(/[;|]/).map(s => s.trim()).filter(Boolean).map(s => islandNorm(s) || (e.push(`unknown island “${s}”`), null)).filter(Boolean);
+      const type = PTYPES.find(t => strip(t) === strip(r.partner_type)) || (r.partner_type ? (e.push(`unknown partner_type “${r.partner_type}”`), null) : 'Community group');
+      const ch1 = r.primary_channel ? CHANNELS.find(c => strip(c) === strip(r.primary_channel)) || (e.push(`unknown primary_channel “${r.primary_channel}”`), null) : 'Phone';
+      const ch2 = r.backup_channel ? CHANNELS.find(c => strip(c) === strip(r.backup_channel)) || (e.push(`unknown backup_channel “${r.backup_channel}”`), null) : '';
+      let res = null;
+      if (r.resource_category) {
+        const cat = catNorm(r.resource_category); if (!cat) e.push(`unknown resource_category “${r.resource_category}”`);
+        const isl = islandNorm(r.resource_island || islands[0] || ''); if (!isl) e.push(`resource_island “${r.resource_island}” is not an island`);
+        const qty = Number(r.quantity); if (r.quantity === '' || !(qty >= 0)) e.push('quantity must be a number 0 or more');
+        const status = r.status ? RSTATUS.find(s => strip(s) === strip(r.status)) || (e.push(`unknown status “${r.status}”`), null) : 'Available';
+        let lc = null; if (r.last_confirmed) { const t = Date.parse(r.last_confirmed); if (isNaN(t)) e.push(`last_confirmed “${r.last_confirmed}” is not a date`); else lc = new Date(t).toISOString(); }
+        res = {category:cat, island:isl, quantity:Math.round(qty), unit:r.unit || catOf(cat).unit, status, lastConfirmed:lc, notes:r.notes || ''};
+      }
+      const pii = piiCheck([['contact', r.contact]], true) || piiCheck([['notes', r.notes]]);
+      if (pii) e.push(pii);
+      if (!islands.length && !(res && res.island)) e.push('islands is empty');
+      if (e.length) { errs.push(`Line ${r._line}: ${e.join('; ')}`); continue; }
+      const key = strip(r.partner_name);
+      if (!known.has(key) && !newP.has(key)) newP.set(key, {name:r.partner_name, type, islands:islands.length ? islands : [res.island], contact:r.contact || '', primaryChannel:ch1, backupChannel:ch2, languages:(r.languages || '').split(/[;|]/).map(s => s.trim()).filter(Boolean).join(', '), notes:res ? '' : (r.notes || '')});
+      else if (newP.has(key)) { const np = newP.get(key); islands.forEach(i => { if (!np.islands.includes(i)) np.islands.push(i); }); }
+      if (res) { good.push({key, res}); resN++; }
+    }
+    S.pending.p = {known, newP, good};
+    msg.className = 'msg ' + (errs.length ? 'bad' : 'ok');
+    msg.innerHTML = `Ready: ${newP.size} new partner${newP.size === 1 ? '' : 's'}, ${resN} resource${resN === 1 ? '' : 's'}${known.size ? ` (existing partners are reused by name)` : ''}.` + (errs.length ? ` ${errs.length} row${errs.length === 1 ? '' : 's'} will be skipped:<ul>${errs.slice(0, 8).map(x => `<li>${esc(x)}</li>`).join('')}${errs.length > 8 ? `<li>${errs.length - 8} more</li>` : ''}</ul>` : '');
+    go.disabled = !(newP.size || resN) || S.readOnly || !S.db;
+    go.textContent = `Import ${newP.size + resN} record${newP.size + resN === 1 ? '' : 's'}`;
+  } else {
+    if (!head.includes('title')) { msg.className = 'msg bad'; msg.textContent = 'The header must include title. Copy the template to see all columns.'; return; }
+    for (const r of items) {
+      const e = [];
+      if (!r.title) e.push('title is empty');
+      const isl = islandNorm(r.island); if (!isl || isl === 'Statewide') e.push(`island “${r.island}” must be one island`);
+      const cat = catNorm(r.category); if (!cat) e.push(`unknown category “${r.category}”`);
+      const qty = Number(r.quantity); if (!(qty > 0)) e.push('quantity must be above 0');
+      const hz = r.hazard ? HAZARDS.find(h => strip(h) === strip(r.hazard)) || (e.push(`unknown hazard “${r.hazard}”`), null) : 'Other';
+      const pr = r.priority ? PRIORITIES.find(h => strip(h) === strip(r.priority)) || (e.push(`unknown priority “${r.priority}”`), null) : 'Normal';
+      if (!r.basis) e.push('basis is empty: say where the number comes from');
+      const pii = piiCheck([['title', r.title], ['area', r.area], ['basis', r.basis], ['notes', r.notes]]); if (pii) e.push(pii);
+      if (e.length) { errs.push(`Line ${r._line}: ${e.join('; ')}`); continue; }
+      good.push({title:r.title, island:isl, area:r.area || '', hazard:hz, category:cat, cmist:catOf(cat).cmist, quantity:Math.round(qty), unit:r.unit || catOf(cat).unit, priority:pr, basis:r.basis, notes:r.notes || ''});
+    }
+    S.pending.n = good;
+    msg.className = 'msg ' + (errs.length ? 'bad' : 'ok');
+    msg.innerHTML = `Ready: ${good.length} need${good.length === 1 ? '' : 's'}.` + (errs.length ? ` ${errs.length} row${errs.length === 1 ? '' : 's'} will be skipped:<ul>${errs.slice(0, 8).map(x => `<li>${esc(x)}</li>`).join('')}${errs.length > 8 ? `<li>${errs.length - 8} more</li>` : ''}</ul>` : '');
+    go.disabled = !good.length || S.readOnly || !S.db;
+    go.textContent = `Import ${good.length} need${good.length === 1 ? '' : 's'}`;
+  }
+}
+async function runImport(which){
+  const go = $('#imp-' + which + '-go'), msg = $('#imp-' + which + '-msg');
+  const pend = S.pending[which]; if (!pend) return;
+  go.disabled = true;
+  if (which === 'p') {
+    const ids = new Map(pend.known); let done = 0;
+    const ok = await w(async () => {
+      for (const [key, p] of pend.newP) { const ref = await S.db.collection('partners').add({...p, createdAt:now(), createdBy:S.me, updatedAt:now()}); ids.set(key, ref.id); msg.textContent = `Saving… ${++done}`; }
+      for (const g of pend.good) { await S.db.collection('resources').add({...g.res, partnerId:ids.get(g.key), cmist:catOf(g.res.category).cmist, confirmedBy:g.res.lastConfirmed ? S.me : null, createdAt:now(), updatedAt:now()}); msg.textContent = `Saving… ${++done}`; }
+    });
+    if (ok) { msg.className = 'msg ok'; msg.textContent = `Imported ${pend.newP.size} partner${pend.newP.size === 1 ? '' : 's'} and ${pend.good.length} resource${pend.good.length === 1 ? '' : 's'}.`; log(`Imported ${pend.newP.size} partners and ${pend.good.length} resources`); $('#imp-p').value = ''; S.pending.p = null; }
+  } else {
+    let done = 0;
+    const ok = await w(() => seq(pend, n => S.db.collection('needs').add({...n, createdAt:now(), createdBy:S.me, updatedAt:now()}).then(() => { msg.textContent = `Saving… ${++done}`; })));
+    if (ok) { msg.className = 'msg ok'; msg.textContent = `Imported ${pend.length} needs.`; log(`Imported ${pend.length} needs`); $('#imp-n').value = ''; S.pending.n = null; }
+  }
+}
+async function removeDemo(){
+  const groups = ['matches','resources','needs','partners','activity'].map(k => [k, (k === 'activity' ? S.activity : [...S[k].values()]).filter(x => x.demo)]);
+  const total = groups.reduce((t, [, a]) => t + a.length, 0);
+  if (!await confirmBox('Remove example records?', `${total} made-up example records will be deleted for everyone. Records your team added stay.`, 'Remove')) return;
+  const ok = await w(() => seq(groups, ([k, arr]) => seq(arr, x => S.db.doc(k + '/' + x.id).delete())), 'Example records removed');
+  if (ok) log('Removed example records');
+}
+
+/* ---------- events ---------- */
+const ACTIONS = {
+  'goto':(_, b) => { location.hash = b.dataset.view; },
+  'close-dlg':() => closeDialog(),
+  'add-need':() => needForm(), 'edit-need':id => needForm(id), 'del-need':id => delNeed(id),
+  'find-matches':id => matchDialog(id), 'propose':(_, b) => propose(b.dataset.need, b.dataset.res),
+  'auto-match':() => autoMatch(), 'ai-match':() => aiMatch(),
+  'add-partner':() => partnerForm(), 'edit-partner':id => partnerForm(id), 'del-partner':id => delPartner(id),
+  'add-resource':id => resourceForm(null, id), 'edit-resource':id => resourceForm(id), 'del-resource':id => delResource(id),
+  'confirm-res':id => confirmRes(id), 'confirm-all':id => confirmAll(id), 'checkin':id => checkinDialog(id),
+  'find-dupes':() => dupesDialog(),
+  'merge':async (_, b) => { if (await mergePartners(b.dataset.keep, b.dataset.drop)) setTimeout(renderDupes, 300); },
+  'swap-dupe':(_, b) => mergePartners(b.dataset.drop, b.dataset.keep).then(ok => ok && setTimeout(renderDupes, 300)),
+  'dismiss-dupe':(_, b) => { S.dismissed.add(b.dataset.k); renderDupes(); },
+  'm-confirm':id => mConfirm(id), 'm-decline':id => mDecline(id), 'm-reopen':id => mReopen(id), 'm-role':id => mRole(id), 'm-remove':id => mRemove(id),
+  'event-settings':() => eventSettings(),
+  'copy-summary':() => copyText(summaryText()),
+  'dl-summary':() => offerFile(`esf6-summary-${stamp()}.md`, summaryText()),
+  'dl-field':() => offerFile(`esf6-field-sheet-${stamp()}.html`, fieldSheet()),
+  'dl-plan':() => offerFile(`esf6-plan-${stamp()}.csv`, planCSV()),
+  'ai-brief':() => aiBrief(), 'ai-brief-stop':() => S.briefCtl?.abort(), 'copy-ai-brief':() => copyText(S.aiBriefText),
+  'copy-tpl':(_, b) => copyText(b.dataset.which === 'p' ? TPL_P_EX : TPL_N_EX),
+  'imp-check':(_, b) => checkImport(b.dataset.which), 'imp-go':(_, b) => runImport(b.dataset.which),
+  'dl-p':() => offerFile(`partners-resources-${stamp()}.csv`, partnersCSV()),
+  'dl-n':() => offerFile(`needs-${stamp()}.csv`, needsCSV()),
+  'dl-m':() => offerFile(`matches-${stamp()}.csv`, matchesCSV()),
+  'rm-demo':() => removeDemo(),
+  'backup-dl':() => offerFile(`kokua-match-backup-${stamp()}.json`, JSON.stringify({app:'kokua-match', version:1, exportedAt:now(), data:S.db._all()}, null, 2)),
+  'reset-example':async () => {
+    if (!await confirmBox('Reset to example data?', 'Every record on this device will be replaced with the made-up example records. Download a backup first if you want to keep your changes.', 'Reset')) return;
+    try { await S.db._replace(exampleData()); toast('Example data restored'); } catch { toast('Couldn’t reset. Storage may be full or blocked.', 'crit'); }
+  }
+};
+$('#restore-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f || !S.local) return;
+  const msg = $('#local-msg');
+  let obj;
+  try { obj = JSON.parse(await f.text()); } catch { msg.className = 'msg bad'; msg.textContent = 'That file isn’t a readable backup.'; return; }
+  const d = obj && obj.app === 'kokua-match' ? obj.data : null;
+  if (!d || typeof d !== 'object' || !['partners','needs','resources','matches'].some(k => d[k] && typeof d[k] === 'object')) { msg.className = 'msg bad'; msg.textContent = 'That file isn’t a Kōkua Match backup.'; return; }
+  const n = k => d[k] ? Object.keys(d[k]).length : 0;
+  if (!await confirmBox('Restore this backup?', `Replace every record on this device with the backup from ${esc(obj.exportedAt ? hst(obj.exportedAt) : 'an unknown date')}: ${n('partners')} partners, ${n('resources')} resources, ${n('needs')} needs, ${n('matches')} matches.`, 'Restore', false)) return;
+  try { await S.db._replace(d); msg.className = 'msg ok'; msg.textContent = 'Backup restored.'; toast('Backup restored'); }
+  catch { msg.className = 'msg bad'; msg.textContent = 'Couldn’t restore. Storage may be full or blocked.'; }
+});
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-tab]');
+  if (t) { location.hash = t.dataset.tab; return; }
+  const b = e.target.closest('[data-action]');
+  if (!b || b.disabled) return;
+  const fn = ACTIONS[b.dataset.action];
+  if (fn) { e.preventDefault(); fn(b.dataset.id, b, e); }
+});
+$('.tabs').addEventListener('keydown', e => {
+  if (!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
+  const i = VIEWS.indexOf(S.view);
+  const j = e.key === 'Home' ? 0 : e.key === 'End' ? VIEWS.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + VIEWS.length) % VIEWS.length;
+  e.preventDefault(); location.hash = VIEWS[j]; $('#tab-' + VIEWS[j]).focus();
+});
+document.addEventListener('change', async e => {
+  const sel = e.target.closest('[data-res-status]');
+  if (sel) {
+    const id = sel.dataset.resStatus, r = S.resources.get(id); if (!r) return;
+    const ok = await w(() => S.db.doc('resources/' + id).update({status:sel.value, lastConfirmed:now(), confirmedBy:S.me}), 'Status updated');
+    if (ok) log(`${pName(r.partnerId)}: ${catOf(r.category).label} now ${sel.value.toLowerCase()}`); else sel.value = r.status;
+  }
+});
+['nf-island','nf-cmist','nf-status','pf-island','pf-cat','pf-type','pf-stale'].forEach(id => $('#' + id).addEventListener('change', render));
+['nf-q','pf-q'].forEach(id => $('#' + id).addEventListener('input', render));
+$('#ask-form').addEventListener('submit', e => { e.preventDefault(); ask(); });
+['p','n'].forEach(w2 => {
+  $('#imp-' + w2 + '-file').addEventListener('change', async e => { const f = e.target.files[0]; if (!f) return; $('#imp-' + w2).value = await f.text(); e.target.value = ''; checkImport(w2); });
+  $('#imp-' + w2).addEventListener('input', () => { S.pending[w2] = null; $('#imp-' + w2 + '-go').disabled = true; });
+});
+window.addEventListener('hashchange', route);
+setInterval(() => { if (S.sync === 'live') render(); }, 60000);
+
+/* ---------- static setup ---------- */
+$('#nf-island').innerHTML = opts(PLACE_ISLANDS, '', 'All islands');
+$('#nf-cmist').innerHTML = '<option value="">All</option>' + Object.entries(CMIST).map(([k, v]) => `<option value="${k}">${k} · ${esc(v)}</option>`).join('');
+$('#pf-island').innerHTML = opts(ISLANDS, '', 'All islands');
+$('#pf-cat').innerHTML = catOpts('', 'All resources');
+$('#pf-type').innerHTML = opts(PTYPES, '', 'All types');
+$('#tpl-p').textContent = TPL_P_EX;
+$('#tpl-n').textContent = TPL_N_EX;
+
+/* ---------- profiles ---------- */
+let profBusy = false;
+async function refreshProfiles(){
+  if (!S.user || profBusy) return;
+  const ids = new Set();
+  S.matches.forEach(m => { if (m.decidedBy) ids.add(m.decidedBy); });
+  S.resources.forEach(r => { if (r.confirmedBy) ids.add(r.confirmedBy); });
+  S.activity.forEach(a => { if (a.by) ids.add(a.by); });
+  const need = [...ids].filter(i => !(i in S.profiles) && i !== S.me);
+  if (!need.length) return;
+  profBusy = true;
+  try { const ps = await S.user.profiles(need); need.forEach(i => { S.profiles[i] = ps[i]?.name || ''; }); }
+  catch { need.forEach(i => { S.profiles[i] = ''; }); }
+  finally { profBusy = false; }
+  render();
+}
+
+/* ---------- standalone mode: same store API, kept in this browser ---------- */
+const LS_KEY = 'kokua-match-data-v1';
+function localDB(){
+  let data = {}, memOnly = false;
+  const load = () => { try { data = JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch { data = data || {}; memOnly = true; } };
+  load();
+  const subs = new Set();
+  const err = (code, message) => Object.assign(new Error(message), {code});
+  const persist = () => {
+    if (memOnly) return;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+    catch (e) { if (e && (e.name === 'QuotaExceededError' || e.code === 22)) throw err('quota_exceeded', 'Browser storage is full'); memOnly = true; }
+  };
+  const notify = () => setTimeout(() => subs.forEach(f => { try { f(); } catch (e) { console.error(e); } }), 0);
+  const write = fn => new Promise((res, rej) => {
+    const before = JSON.stringify(data);
+    try { fn(); persist(); notify(); res(); }
+    catch (e) { data = JSON.parse(before); rej(e && e.code ? e : err('unavailable', String(e && e.message || e))); }
+  });
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const snapDoc = (id, obj) => ({id, exists:!!obj, data:() => obj ? clone(obj) : undefined, metadata:{fromCache:false, hasPendingWrites:false}});
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  window.addEventListener('storage', e => { if (e.key === LS_KEY) { load(); notify(); } });
+  function docRef(coll, id){
+    return {
+      id, path:coll + '/' + id,
+      get: async () => snapDoc(id, data[coll] && data[coll][id]),
+      set: d => write(() => { (data[coll] = data[coll] || {})[id] = clone(d); }),
+      update: d => write(() => { const cur = data[coll] && data[coll][id]; if (!cur) throw err('invalid_argument', 'Record does not exist'); Object.assign(cur, clone(d)); }),
+      delete: () => write(() => { if (data[coll]) delete data[coll][id]; }),
+      onSnapshot(next){ const f = () => next(snapDoc(id, data[coll] && data[coll][id])); subs.add(f); setTimeout(f, 0); return () => subs.delete(f); },
+      collection(){ throw err('invalid_argument', 'Nested collections are not used'); }
+    };
+  }
+  function query(coll, ord, lim){
+    const run = () => {
+      let rows = Object.entries(data[coll] || {});
+      if (ord) rows.sort(([, a], [, b]) => { const x = a[ord.f], y = b[ord.f]; const c = x == null ? 1 : y == null ? -1 : x < y ? -1 : x > y ? 1 : 0; return ord.dir === 'desc' ? -c : c; });
+      else rows.sort(([a], [b]) => a < b ? -1 : 1);
+      if (lim) rows = rows.slice(0, lim);
+      const docs = rows.map(([id, o]) => snapDoc(id, o));
+      return {docs, size:docs.length, empty:!docs.length, docChanges:() => [], metadata:{fromCache:false, hasPendingWrites:false}};
+    };
+    return {
+      path:coll,
+      orderBy:(f, dir = 'asc') => query(coll, {f, dir}, lim),
+      limit:n => query(coll, ord, n),
+      where(){ throw err('invalid_argument', 'Filters are not used'); },
+      get: async () => run(),
+      onSnapshot(next){ const f = () => next(run()); subs.add(f); setTimeout(f, 0); return () => subs.delete(f); },
+      doc:id => docRef(coll, id || newId()),
+      add: async d => { const id = newId(); await docRef(coll, id).set(d); return docRef(coll, id); }
+    };
+  }
+  return {
+    collection:p => query(String(p)),
+    doc:p => { const [c, id] = String(p).split('/'); return docRef(c, id); },
+    _all:() => clone(data),
+    _replace:obj => write(() => { data = clone(obj || {}); }),
+    _empty:() => !['partners','needs','resources','matches'].some(k => data[k] && Object.keys(data[k]).length),
+    _memOnly:() => memOnly
+  };
+}
+function exampleData(){
+  const d = n => new Date(Date.now() - n * 864e5).toISOString();
+  const by = (list, fn) => Object.fromEntries(list.map(a => [a[0], fn(...a)]));
+  const partners = by([
+    ['ex-p1','Example – West Maui Community Kitchen','Nonprofit',['Maui'],'Phone','Text message','Main office line (example)','Ilokano, Tagalog','',70],
+    ['ex-p2','Example – Upcountry Faith Network','Faith-based',['Maui'],'Phone','Radio','Church office line (example)','Tagalog','Fellowship halls with generator hookups',70],
+    ['ex-p3','Example – Kula Community Association','Community group',['Maui'],'Text message','In person','Association duty phone (example)','','',70],
+    ['ex-p4','Example – Kula Community Assn','Community group',['Maui'],'In person','','','','Entered twice on purpose to show duplicate merging',61],
+    ['ex-p5','Example – Maui Paratransit Contractor','Business',['Maui'],'Phone','Radio','Dispatch line (example)','','Lift-equipped vans',70],
+    ['ex-p6','Example – Medical Equipment Supplier','Business',['Statewide'],'Phone','Email','24-hour customer line (example)','','Portable power stations and oxygen',70],
+    ['ex-p7','Example – Pacific Islander Interpreters Collective','Nonprofit',['Maui','Oʻahu'],'Email','Phone','Shared scheduling inbox (example)','Marshallese, Chuukese, Ilokano','',70],
+    ['ex-p8','Example – Island Animal Rescue','Nonprofit',['Maui'],'Phone','Text message','Shelter front desk (example)','','Crates and co-located pet areas',70],
+    ['ex-p9','Example – Oʻahu Senior Services Hub','Nonprofit',['Oʻahu'],'Phone','Email','Main office line (example)','Japanese, Korean','',70]
+  ], (id, name, type, islands, primaryChannel, backupChannel, contact, languages, notes, age) => ({name, type, islands, primaryChannel, backupChannel, contact, languages, notes, demo:true, createdAt:d(age)}));
+  const resources = by([
+    ['ex-r1','ex-p1','food','Maui',1500,'meals','Available',5,''],
+    ['ex-r2','ex-p1','water','Maui',2000,'gallons','Limited',51,''],
+    ['ex-r3','ex-p2','shelter','Maui',150,'people','Available',2,'Two halls, generator hookup'],
+    ['ex-r4','ex-p2','volunteers','Maui',30,'people','Available',2,''],
+    ['ex-r5','ex-p3','afn_shelter','Maui',25,'people','Available',11,'Accessible restrooms, raised cots'],
+    ['ex-r6','ex-p4','bh','Maui',4,'staff','Limited',69,''],
+    ['ex-r7','ex-p5','transport','Maui',40,'seats','Available',1,'10 lift-equipped vans'],
+    ['ex-r8','ex-p6','power','Statewide',60,'devices','Available',9,'Portable power stations'],
+    ['ex-r9','ex-p6','oxygen','Statewide',30,'patients','Limited',87,''],
+    ['ex-r10','ex-p7','interp','Maui',6,'interpreters','Available',7,''],
+    ['ex-r11','ex-p7','interp','Oʻahu',5,'interpreters','Available',7,''],
+    ['ex-r12','ex-p8','pets','Maui',80,'animals','Available',13,''],
+    ['ex-r13','ex-p9','transport','Oʻahu',20,'seats','Available',39,''],
+    ['ex-r14','ex-p9','meds','Oʻahu',25,'patients','Available',3,'Medical-grade refrigerator']
+  ], (id, partnerId, category, island, quantity, unit, status, age, notes) => ({partnerId, category, cmist:catOf(category).cmist, island, quantity, unit, status, lastConfirmed:d(age), confirmedBy:null, notes, demo:true, createdAt:d(70)}));
+  const basis = 'Example figure for demonstration, not from a real plan';
+  const needs = by([
+    ['ex-n1','Accessible shelter beds, Upcountry','Maui','Kula','Wildfire','Life-safety','afn_shelter',40,'people',''],
+    ['ex-n2','Power for oxygen concentrators and other medical devices','Maui','Lāhainā','Wildfire','Life-safety','power',45,'devices',''],
+    ['ex-n3','Accessible evacuation seats, West Maui','Maui','Lāhainā','Wildfire','Life-safety','transport',60,'seats',''],
+    ['ex-n4','Interpreters: Ilokano, Tagalog, Marshallese','Maui','Wailuku','Wildfire','High','interp',8,'interpreters',''],
+    ['ex-n5','General shelter space, Central Maui','Maui','Kahului','Wildfire','High','shelter',300,'people',''],
+    ['ex-n6','Pet and service animal space','Maui','Kahului','Wildfire','High','pets',70,'animals',''],
+    ['ex-n7','Crisis counselors at shelters','Maui','Wailuku','Wildfire','Normal','bh',6,'staff',''],
+    ['ex-n8','Meals for the first 72 hours','Maui','Kahului','Wildfire','Normal','food',2700,'meals',''],
+    ['ex-n9','Accessible transport for high-rise residents during power loss','Oʻahu','Waikīkī','Tsunami','Life-safety','transport',35,'seats','Elevators out; stair-chair teams needed first'],
+    ['ex-n10','Medication cold storage','Oʻahu','Kalihi','Tsunami','High','meds',20,'patients',''],
+    ['ex-n11','Drinking water, Upcountry','Maui','Kula','Wildfire','Normal','water',3000,'gallons','']
+  ], (id, title, island, area, hazard, priority, category, quantity, unit, notes) => ({title, island, area, hazard, priority, category, cmist:catOf(category).cmist, quantity, unit, basis, notes, demo:true, createdAt:d(40)}));
+  const matches = by([
+    ['ex-m1','ex-n1','ex-r5','ex-p3',25,'Confirmed','',3,2],
+    ['ex-m2','ex-n3','ex-r7','ex-p5',40,'Confirmed','',1.1,1],
+    ['ex-m3','ex-n2','ex-r8','ex-p6',45,'Proposed','Statewide supplier with enough free units; needs inter-island lift to Maui.',0.8,null],
+    ['ex-m4','ex-n8','ex-r1','ex-p1',1500,'Proposed','',0.4,null],
+    ['ex-m5','ex-n10','ex-r14','ex-p9',20,'Confirmed','',5,4]
+  ], (id, needId, resourceId, partnerId, quantity, status, rationale, made, decided) => ({needId, resourceId, partnerId, quantity, role:'Lead', status, aiSuggested:false, rationale, decidedBy:null, decidedAt:decided == null ? null : d(decided), createdAt:d(made), demo:true}));
+  const activity = by([
+    ['ex-a1','Confirmed Example – Kula Community Association for “Accessible shelter beds, Upcountry” as lead',2],
+    ['ex-a2','Confirmed Example – Maui Paratransit Contractor for “Accessible evacuation seats, West Maui” as lead',1],
+    ['ex-a3','Proposed Example – Medical Equipment Supplier for “Power for oxygen concentrators and other medical devices”',0.8]
+  ], (id, text, age) => ({text, at:d(age), by:null, demo:true}));
+  return {settings:{current:{eventName:'Example: Maui wildfire planning cycle', mode:'Planning', hazard:'Wildfire', islands:['Maui'], stalePlanningDays:30, staleActivatedHours:12, demo:true, updatedAt:d(0)}}, partners, resources, needs, matches, activity};
+}
+const MIME = {csv:'text/csv', md:'text/markdown', html:'text/html', json:'application/json', txt:'text/plain'};
+const localDownloads = {save: async ({filename, data}) => {
+  const blob = data instanceof Blob ? data : new Blob([data], {type:(MIME[String(filename).split('.').pop()] || 'application/octet-stream') + ';charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  return {status:'saved'};
+}};
+
+/* ---------- boot ---------- */
+async function boot(){
+  route();
+  if (!window.claude || typeof window.claude.use !== 'function') {
+    S.local = true; S.me = 'local'; S.canAdmin = true; S.downloads = localDownloads;
+    S.db = localDB();
+    if (S.db._empty()) await S.db._replace(exampleData()).catch(() => {});
+    subscribe(S.db);
+    return;
+  }
+  const use = n => window.claude.use(n).catch(() => null);
+  const [db, user, sample, downloads] = await Promise.all([use('db'), use('user'), use('sample'), use('downloads')]);
+  S.user = user; S.sample = sample; S.downloads = downloads;
+  if (user) {
+    try { S.me = await user.id(); } catch { S.me = null; }
+    try { S.canAdmin = await user.canEdit(); } catch { S.canAdmin = false; }
+    try { const cw = await user.can('data.write'); if (cw === false) S.readOnly = true; } catch {}
+  }
+  if (!db) { S.sync = 'offline'; render(); return; }
+  S.db = db;
+  subscribe(db);
+}
+function subscribe(db){
+  const coll = ['partners','resources','needs','matches'];
+  const slow = setTimeout(() => { if (S.sync === 'connecting') { S.sync = 'slow'; render(); } }, 10000);
+  const ready = () => { if (['partners','resources','needs','matches','settings'].every(k => S.loaded[k]) && S.sync !== 'error') { S.sync = 'live'; clearTimeout(slow); } };
+  const onErr = () => { S.sync = 'error'; clearTimeout(slow); render(); };
+  coll.forEach(k => db.collection(k).onSnapshot(snap => {
+    S[k] = new Map(snap.docs.map(d => [d.id, {...d.data(), id:d.id}]));
+    if (!snap.metadata.fromCache) S.loaded[k] = true;
+    ready(); render();
+  }, onErr));
+  db.doc('settings/current').onSnapshot(snap => { S.settings = snap.exists ? {...snap.data()} : {}; if (!snap.metadata.fromCache) S.loaded.settings = true; ready(); render(); }, onErr);
+  db.collection('activity').orderBy('at', 'desc').limit(40).onSnapshot(snap => { S.activity = snap.docs.map(d => ({...d.data(), id:d.id})); render(); }, () => {});
+  render();
+}
+boot();
+})();
+</script>
+</body>
+</html>
